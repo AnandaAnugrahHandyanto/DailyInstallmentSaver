@@ -1,3 +1,19 @@
 <resources>
-    <string name="app_name">DailyInstallmentSaver</string>
+    <string name="app_name">Daily Installment Saver</string>
+    <string name="dashboard_title">Daily Installment Saver</string>
+    <string name="total_daily_saving">Total Daily Saving</string>
+    <string name="add_installment">Add Installment</string>
+    <string name="installment_name">Installment Name</string>
+    <string name="amount">Amount</string>
+    <string name="wallet">Wallet (e.g. Dana, Gopay)</string>
+    <string name="due_date">Due Date</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="daily_needed">Daily: Rp %1$s</string>
+    <string name="notification_title">Daily Saving Reminder</string>
+    <string name="notification_content">Today you need to save Rp %1$s (%2$s)</string>
+    <string name="language_toggle">EN/ID</string>
+    <string name="empty_list">No installments yet. Add one!</string>
+    <string name="pick_date">Pick Date</string>
+    <string name="days_left">%1$d days left</string>
 </resources>

@@ -1,37 +1,34 @@
-# DailyInstallmentSaver
+# DailyInstallmentSaver 💰
 
-Android app prototype to manage daily savings for multiple installments across different wallets (Dana, Gopay, etc).
+DailyInstallmentSaver is a simple yet powerful Android app built with **Jetpack Compose** to help you track and manage your daily savings for various installments. It calculates exactly how much you need to save every day based on your target amount and due date.
 
 ## ✨ Features
-
-- Track multiple installments
-- Auto calculate daily saving target
-- Support multiple wallets
-- Simple dashboard UI
+- **Dashboard**: View all active installments and your total daily saving target.
+- **Add Installment**: Easily input installment name, total amount, wallet type, and due date.
+- **Auto-Calculation**: Automatically computes daily savings (Amount / Days Left).
+- **Daily Notifications**: Get reminded every day with a summary of what you need to save.
+- **Localization**: Supports English and Indonesian.
+- **Offline First**: Uses Room Database for local data persistence.
 
 ## 🛠 Tech Stack
+- **Language**: Kotlin
+- **UI Framework**: Jetpack Compose
+- **Database**: Room
+- **Architecture**: MVVM (Model-View-ViewModel)
+- **Background Tasks**: WorkManager (for Notifications)
+- **Navigation**: Navigation Compose
 
-- Kotlin
-- Jetpack Compose
-- Material 3
+## 🚀 Installation
+1. Clone this repository.
+2. Open the project in **Android Studio**.
+3. Sync Gradle and ensure SDK 33+ is installed.
+4. Run the app on an emulator or physical device.
 
-## 🚀 Getting Started
+## 📱 Usage
+1. Tap the **FAB (+)** button to add a new installment.
+2. Fill in the details and pick a due date.
+3. View your daily saving requirement on the Dashboard.
+4. Receive a notification every day summarizing your saving goals.
 
-1. Clone repo
-
-```bash
-git clone https://github.com/yourusername/DailyInstallmentSaver.git
-```
-
-2. Open in Android Studio
-3. Run on emulator or device
-4. 📱 Usage
-5. Click Load Demo Data
-6. App will display daily saving target per wallet
-
-## 📌 Roadmap
-
-- Add custom input form
-- Add local database (Room)
-- Add notification reminder
-- Add statistics & charts
+## 📄 License
+This project is licensed under the MIT License.
