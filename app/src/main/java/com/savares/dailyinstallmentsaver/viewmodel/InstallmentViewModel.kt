@@ -73,6 +73,12 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun updateInstallment(installment: InstallmentEntity) {
+        viewModelScope.launch {
+            dao.update(installment)
+        }
+    }
+
     fun deleteInstallment(installment: InstallmentEntity) {
         viewModelScope.launch {
             dao.delete(installment)

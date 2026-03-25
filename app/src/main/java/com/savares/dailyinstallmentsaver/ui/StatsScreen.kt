@@ -8,6 +8,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.automirrored.filled.ChevronLeft
+import androidx.compose.material.icons.automirrored.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,13 +18,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.savares.dailyinstallmentsaver.R
 import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
+import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -102,27 +104,53 @@ fun AccountMockSection() {
 
 @Composable
 fun CalendarView(logsByDate: Map<String, Any>) {
-    val calendar = Calendar.getInstance()
+    var calendar by remember { mutableStateOf(Calendar.getInstance()) }
+    
+    val monthName = remember(calendar) {
+        SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(calendar.time)
+    }
+    
     val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-    val currentDay = calendar.get(Calendar.DAY_OF_MONTH)
-    val currentMonth = calendar.get(Calendar.MONTH)
-    val currentYear = calendar.get(Calendar.YEAR)
+    val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+    val isCurrentMonth = Calendar.getInstance().get(Calendar.MONTH) == calendar.get(Calendar.MONTH) &&
+                         Calendar.getInstance().get(Calendar.YEAR) == calendar.get(Calendar.YEAR)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            // Very simple grid
-            val weeks = (daysInMonth + 6) / 7 + 1
-            for (w in 0 until 5) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    for (d in 1..7) {
-                        val dayNum = w * 7 + d
-                        if (dayNum <= daysInMonth) {
-                            val dateKey = "$currentYear-$currentMonth-$dayNum"
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = {
+                    calendar = (calendar.clone() as Calendar).apply { add(Calendar.MONTH, -1) }
+                }) {
+                    Icon(Icons.AutoMirrored.Filled.ChevronLeft, contentDescription = stringResource(R.string.prev_month))
+                }
+                Text(monthName, fontWeight = FontWeight.Bold)
+                IconButton(onClick = {
+                    calendar = (calendar.clone() as Calendar).apply { add(Calendar.MONTH, 1) }
+                }) {
+                    Icon(Icons.AutoMirrored.Filled.ChevronRight, contentDescription = stringResource(R.string.next_month))
+                }
+            }
+            
+            Spacer(Modifier.height(8.dp))
+
+            val firstDayOfWeek = (calendar.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, 1) }.get(Calendar.DAY_OF_WEEK)
+            val offset = firstDayOfWeek - 1
+            
+            for (w in 0 until 6) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    for (d in 0 until 7) {
+                        val dayNum = w * 7 + d - offset + 1
+                        if (dayNum in 1..daysInMonth) {
+                            val dateKey = "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH)}-$dayNum"
                             val isSaved = logsByDate.containsKey(dateKey)
-                            val isToday = dayNum == currentDay
+                            val isToday = isCurrentMonth && dayNum == currentDay
                             
                             Box(
                                 modifier = Modifier
@@ -142,7 +170,7 @@ fun CalendarView(logsByDate: Map<String, Any>) {
                                     )
                                     if (isSaved) {
                                         Icon(Icons.Default.Check, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(12.dp))
-                                    } else if (dayNum < currentDay) {
+                                    } else if (isCurrentMonth && dayNum < currentDay) {
                                         Icon(Icons.Default.Close, null, tint = Color.Red.copy(alpha = 0.5f), modifier = Modifier.size(10.dp))
                                     }
                                 }
@@ -152,6 +180,7 @@ fun CalendarView(logsByDate: Map<String, Any>) {
                         }
                     }
                 }
+                if (w * 7 - offset + 1 > daysInMonth) break
             }
         }
     }
@@ -159,7 +188,6 @@ fun CalendarView(logsByDate: Map<String, Any>) {
 
 @Composable
 fun SimpleLineChart(logsByDate: Map<String, Any>) {
-    // Very simple mock chart drawing
     Canvas(modifier = Modifier.fillMaxWidth().height(150.dp)) {
         val width = size.width
         val height = size.height
@@ -167,10 +195,8 @@ fun SimpleLineChart(logsByDate: Map<String, Any>) {
         
         val stepX = width / (points.size - 1)
         
-        // Draw Axis
         drawLine(Color.Gray, Offset(0f, height), Offset(width, height), strokeWidth = 2f)
         
-        // Draw Line
         for (i in 0 until points.size - 1) {
             val startX = i * stepX
             val startY = height - (points[i] * height)

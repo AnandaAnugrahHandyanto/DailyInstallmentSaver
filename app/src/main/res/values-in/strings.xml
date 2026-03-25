@@ -5,11 +5,14 @@
     <string name="stats_title">Statistik</string>
     <string name="total_daily_saving">Rencana Tabungan Hari Ini</string>
     <string name="add_installment">Tambah Cicilan</string>
+    <string name="edit_installment">Ubah Cicilan</string>
     <string name="installment_name">Nama Cicilan</string>
     <string name="amount">Target Nominal</string>
     <string name="wallet">Dompet (misal: Dana, Gopay)</string>
     <string name="due_date">Tanggal Jatuh Tempo</string>
     <string name="save">Simpan</string>
+    <string name="update">Perbarui</string>
+    <string name="edit">Ubah</string>
     <string name="delete">Hapus</string>
     <string name="daily_needed">Harian</string>
     <string name="notification_title">Pengingat Menabung Harian</string>
@@ -30,4 +33,6 @@
     <string name="account">Akun</string>
     <string name="sync_status">Sinkronisasi Lokal Saja</string>
     <string name="login_mock">Masuk (Mock)</string>
+    <string name="prev_month">Seb.</string>
+    <string name="next_month">Ber.</string>
 </resources>

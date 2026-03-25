@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,6 +29,7 @@ import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
 fun DashboardScreen(
     viewModel: InstallmentViewModel,
     onNavigateToAdd: () -> Unit,
+    onNavigateToEdit: (Int) -> Unit,
     currentLanguage: String,
     onLanguageChange: (String) -> Unit
 ) {
@@ -84,7 +86,8 @@ fun DashboardScreen(
                 items(installments, key = { it.id }) { installment ->
                     InstallmentItem(
                         installment = installment,
-                        viewModel = viewModel
+                        viewModel = viewModel,
+                        onEdit = { onNavigateToEdit(installment.id) }
                     )
                 }
             } else {
@@ -120,7 +123,7 @@ fun LanguageToggleButton(currentLanguage: String, onLanguageChange: (String) -> 
 @Composable
 fun TotalSavingCard(total: Double, breakdown: Map<String, Double>) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().animateContentSize(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -168,9 +171,9 @@ fun TotalSavingCard(total: Double, breakdown: Map<String, Double>) {
 @Composable
 fun InstallmentItem(
     installment: InstallmentEntity,
-    viewModel: InstallmentViewModel
+    viewModel: InstallmentViewModel,
+    onEdit: () -> Unit
 ) {
-    // Optimization: Calculate values outside recomposition-heavy blocks or use remember
     val daily = remember(installment.amount, installment.savedAmount, installment.dueDate) {
         viewModel.calculateDailySaving(installment)
     }
@@ -185,7 +188,7 @@ fun InstallmentItem(
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().animateContentSize(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
     ) {
@@ -207,12 +210,21 @@ fun InstallmentItem(
                         color = MaterialTheme.colorScheme.secondary
                     )
                 }
-                IconButton(onClick = { viewModel.deleteInstallment(installment) }) {
-                    Icon(
-                        Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.delete),
-                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                    )
+                Row {
+                    IconButton(onClick = onEdit) {
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.edit),
+                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                        )
+                    }
+                    IconButton(onClick = { viewModel.deleteInstallment(installment) }) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = stringResource(R.string.delete),
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                        )
+                    }
                 }
             }
 
@@ -289,12 +301,16 @@ fun InstallmentItem(
                             disabledContentColor = Color.White
                         )
                     ) {
-                        if (isSavedToday) {
-                            Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.saved_today))
-                        } else {
-                            Text(stringResource(R.string.mark_as_saved))
+                        AnimatedContent(targetState = isSavedToday, label = "") { saved ->
+                            if (saved) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(6.dp))
+                                    Text(stringResource(R.string.saved_today))
+                                }
+                            } else {
+                                Text(stringResource(R.string.mark_as_saved))
+                            }
                         }
                     }
                 }

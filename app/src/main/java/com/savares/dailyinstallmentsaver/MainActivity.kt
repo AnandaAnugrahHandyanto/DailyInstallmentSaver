@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -113,6 +114,7 @@ fun DailyInstallmentApp(currentLanguage: String, onLanguageChange: (String) -> U
                 DashboardScreen(
                     viewModel = viewModel,
                     onNavigateToAdd = { navController.navigate("add_installment") },
+                    onNavigateToEdit = { id -> navController.navigate("edit_installment/$id") },
                     currentLanguage = currentLanguage,
                     onLanguageChange = onLanguageChange
                 )
@@ -126,6 +128,14 @@ fun DailyInstallmentApp(currentLanguage: String, onLanguageChange: (String) -> U
             composable("add_installment") {
                 AddInstallmentScreen(
                     viewModel = viewModel,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
+            composable("edit_installment/{installmentId}") { backStackEntry ->
+                val id = backStackEntry.arguments?.getString("installmentId")?.toIntOrNull()
+                AddInstallmentScreen(
+                    viewModel = viewModel,
+                    installmentId = id,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }

@@ -19,20 +19,40 @@ import java.util.*
 @Composable
 fun AddInstallmentScreen(
     viewModel: InstallmentViewModel,
+    installmentId: Int? = null,
     onNavigateBack: () -> Unit
 ) {
+    val installments by viewModel.installments.collectAsState()
+    val editingInstallment = remember(installmentId, installments) {
+        installments.find { it.id == installmentId }
+    }
+
     var name by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var wallet by remember { mutableStateOf("") }
     var dueDate by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
+    LaunchedEffect(editingInstallment) {
+        editingInstallment?.let {
+            name = it.name
+            amount = it.amount.toString()
+            wallet = it.wallet
+            dueDate = it.dueDate
+        }
+    }
+
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = dueDate)
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.add_installment)) },
+                title = { 
+                    Text(
+                        if (installmentId == null) stringResource(R.string.add_installment) 
+                        else stringResource(R.string.edit_installment)
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
@@ -74,21 +94,32 @@ fun AddInstallmentScreen(
                 onClick = { showDatePicker = true },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                val sdf = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                val sdf = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
                 Text(text = stringResource(R.string.due_date) + ": ${sdf.format(Date(dueDate))}")
             }
 
             Button(
                 onClick = {
                     if (name.isNotBlank() && amount.isNotBlank() && wallet.isNotBlank()) {
-                        viewModel.addInstallment(name, amount.toDouble(), dueDate, wallet)
+                        if (installmentId == null) {
+                            viewModel.addInstallment(name, amount.toDouble(), dueDate, wallet)
+                        } else {
+                            editingInstallment?.let {
+                                viewModel.updateInstallment(it.copy(
+                                    name = name,
+                                    amount = amount.toDouble(),
+                                    dueDate = dueDate,
+                                    wallet = wallet
+                                ))
+                            }
+                        }
                         onNavigateBack()
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = name.isNotBlank() && amount.isNotBlank() && wallet.isNotBlank()
             ) {
-                Text(stringResource(R.string.save))
+                Text(if (installmentId == null) stringResource(R.string.save) else stringResource(R.string.update))
             }
         }
     }

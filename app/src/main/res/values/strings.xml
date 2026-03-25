@@ -5,11 +5,14 @@
     <string name="stats_title">Statistics</string>
     <string name="total_daily_saving">Today\'s Saving Plan</string>
     <string name="add_installment">Add Installment</string>
+    <string name="edit_installment">Edit Installment</string>
     <string name="installment_name">Installment Name</string>
     <string name="amount">Target Amount</string>
     <string name="wallet">Wallet (e.g. Dana, Gopay)</string>
     <string name="due_date">Due Date</string>
     <string name="save">Save</string>
+    <string name="update">Update</string>
+    <string name="edit">Edit</string>
     <string name="delete">Delete</string>
     <string name="daily_needed">Daily Needed</string>
     <string name="notification_title">Daily Saving Reminder</string>
@@ -30,4 +33,6 @@
     <string name="account">Account</string>
     <string name="sync_status">Local Sync Only</string>
     <string name="login_mock">Login (Mock)</string>
+    <string name="prev_month">Prev</string>
+    <string name="next_month">Next</string>
 </resources>
