@@ -13,7 +13,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -118,7 +117,7 @@ fun DashboardScreen(
             if (uiState.installments.isNotEmpty()) {
                 item(key = "title_installments") {
                     Text(
-                        text = "My Installments",
+                        text = stringResource(R.string.my_installments),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(top = 8.dp)
@@ -126,19 +125,24 @@ fun DashboardScreen(
                 }
                 items(
                     items = uiState.installments,
-                    key = { it.id }
-                ) { installment ->
+                    key = { it.installment.id },
+                    contentType = { "installment_item" }
+                ) { itemState ->
                     InstallmentItem(
-                        installment = installment,
-                        viewModel = viewModel,
+                        installment = itemState.installment,
+                        onMarkAsSaved = { viewModel.markAsSaved(itemState.installment) },
                         onEdit = { 
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onNavigateToEdit(installment.id) 
+                            onNavigateToEdit(itemState.installment.id) 
                         },
                         onDelete = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            installmentToDelete = installment
-                        }
+                            installmentToDelete = itemState.installment
+                        },
+                        // Optimization: Use pre-calculated values from UI state
+                        dailySaving = itemState.dailySaving,
+                        daysLeft = itemState.daysLeft,
+                        isSavedToday = itemState.isSavedToday
                     )
                 }
             } else {
@@ -304,22 +308,16 @@ fun TotalSavingCard(total: Double, breakdown: Map<String, Double>) {
 @Composable
 fun InstallmentItem(
     installment: InstallmentEntity,
-    viewModel: InstallmentViewModel,
+    onMarkAsSaved: () -> Unit,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    dailySaving: Double,
+    daysLeft: Long,
+    isSavedToday: Boolean
 ) {
     val haptic = LocalHapticFeedback.current
-    val daily = remember(installment.amount, installment.savedAmount, installment.dueDate) {
-        viewModel.calculateDailySaving(installment)
-    }
-    val formattedDaily = remember(daily) { CurrencyUtil.formatCurrency(daily) }
+    val formattedDaily = remember(dailySaving) { CurrencyUtil.formatCurrency(dailySaving) }
     
-    val daysLeft = remember(installment.dueDate) {
-        viewModel.calculateDaysLeft(installment.dueDate)
-    }
-    val isSavedToday = remember(installment.lastSavedDate) {
-        viewModel.isSavedToday(installment)
-    }
     val progress by remember(installment.savedAmount, installment.amount) {
         derivedStateOf { (installment.savedAmount / installment.amount).coerceIn(0.0, 1.0).toFloat() }
     }
@@ -419,7 +417,6 @@ fun InstallmentItem(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Optimized Glass Section: High Contrast, No real-time blur for 60fps
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
@@ -450,7 +447,7 @@ fun InstallmentItem(
                     Button(
                         onClick = { 
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            viewModel.markAsSaved(installment) 
+                            onMarkAsSaved()
                         },
                         enabled = !isSavedToday,
                         shape = RoundedCornerShape(12.dp),

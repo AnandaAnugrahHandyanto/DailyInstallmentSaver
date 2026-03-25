@@ -90,24 +90,27 @@ fun AddInstallmentScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            val sdf = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+            val formattedDate = remember(dueDate, sdf) { sdf.format(Date(dueDate)) }
+            
             OutlinedButton(
                 onClick = { showDatePicker = true },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                val sdf = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-                Text(text = stringResource(R.string.due_date) + ": ${sdf.format(Date(dueDate))}")
+                Text(text = stringResource(R.string.due_date_display, formattedDate))
             }
 
             Button(
                 onClick = {
                     if (name.isNotBlank() && amount.isNotBlank() && wallet.isNotBlank()) {
+                        val amountVal = amount.toDoubleOrNull() ?: 0.0
                         if (installmentId == null) {
-                            viewModel.addInstallment(name, amount.toDouble(), dueDate, wallet)
+                            viewModel.addInstallment(name, amountVal, dueDate, wallet)
                         } else {
                             editingInstallment?.let {
                                 viewModel.updateInstallment(it.copy(
                                     name = name,
-                                    amount = amount.toDouble(),
+                                    amount = amountVal,
                                     dueDate = dueDate,
                                     wallet = wallet
                                 ))
@@ -132,7 +135,7 @@ fun AddInstallmentScreen(
                     dueDate = datePickerState.selectedDateMillis ?: System.currentTimeMillis()
                     showDatePicker = false
                 }) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             }
         ) {

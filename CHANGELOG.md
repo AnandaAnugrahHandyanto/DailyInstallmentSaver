@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.5.0] - 2026-03-26
+
+### Fixed
+- Full localization support for Indonesian language.
+- Persistence of language settings across app restarts.
+### Optimized
+- Smooth 60-120Hz scrolling by moving all UI logic to ViewModel.
+- Reduced recomposition frequency using `derivedStateOf` and stable keys.
+### Removed
+- Unused Statistics screen and complex chart logic.
+- Mock account/sync components.
+
 ## [1.4.0] - 2026-03-26
 
 ### Removed

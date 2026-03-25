@@ -46,7 +46,6 @@ fun HistoryScreen(viewModel: InstallmentViewModel) {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp)
             ) {
-                // logs are already sorted (reversed) in ViewModel's savingLogs Flow
                 items(
                     items = logs,
                     key = { it.id },
@@ -63,6 +62,7 @@ fun HistoryScreen(viewModel: InstallmentViewModel) {
 fun HistoryListItem(log: SavingLogEntity) {
     val sdf = remember { SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()) }
     val formattedDate = remember(log.date) { sdf.format(Date(log.date)) }
+    val formattedAmount = remember(log.amount) { CurrencyUtil.formatCurrency(log.amount) }
     
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -87,7 +87,7 @@ fun HistoryListItem(log: SavingLogEntity) {
                 Text(formattedDate, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
             }
             Text(
-                "+ " + CurrencyUtil.formatCurrency(log.amount),
+                stringResource(R.string.history_amount_add, formattedAmount),
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color(0xFF4CAF50),
                 fontWeight = FontWeight.ExtraBold

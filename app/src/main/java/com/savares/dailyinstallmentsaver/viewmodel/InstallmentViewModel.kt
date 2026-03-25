@@ -13,8 +13,16 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
+data class DashboardInstallmentUiState(
+    val installment: InstallmentEntity,
+    val dailySaving: Double,
+    val daysLeft: Long,
+    val isSavedToday: Boolean,
+    val progress: Float
+)
+
 data class DashboardUiState(
-    val installments: List<InstallmentEntity> = emptyList(),
+    val installments: List<DashboardInstallmentUiState> = emptyList(),
     val totalDailySaving: Double = 0.0,
     val walletBreakdown: Map<String, Double> = emptyMap(),
     val currentStreak: Int = 0,
@@ -24,9 +32,16 @@ data class DashboardUiState(
     val overallProgress: Int = 0
 )
 
+data class StatsUiState(
+    val logsByDate: Map<String, List<SavingLogEntity>> = emptyMap(),
+    val trendPoints: List<Float> = emptyList()
+)
+
 class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
 
     private val dao = AppDatabase.getDatabase(app).installmentDao()
+
+    fun getDao(): InstallmentDao = dao
 
     val installments: StateFlow<List<InstallmentEntity>> = dao.getAll()
         .flowOn(Dispatchers.IO)
@@ -58,6 +73,17 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
     ) { inst, total, wallet, logs ->
         val streakInfo = calculateStreaks(logs)
         val weeklyInfo = calculateWeeklySummary(logs)
+        
+        val installmentUiStates = inst.map { 
+            DashboardInstallmentUiState(
+                installment = it,
+                dailySaving = calculateDailySaving(it),
+                daysLeft = calculateDaysLeft(it.dueDate),
+                isSavedToday = isSavedToday(it),
+                progress = if (it.amount > 0) (it.savedAmount / it.amount).coerceIn(0.0, 1.0).toFloat() else 0f
+            )
+        }
+
         val progress = if (inst.isEmpty()) 0 else {
             val totalTarget = inst.sumOf { it.amount }
             if (totalTarget > 0) {
@@ -66,7 +92,7 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
         }
         
         DashboardUiState(
-            installments = inst,
+            installments = installmentUiStates,
             totalDailySaving = total,
             walletBreakdown = wallet,
             currentStreak = streakInfo.first,
@@ -76,6 +102,30 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
             overallProgress = progress
         )
     }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState())
+
+    val statsUiState: StateFlow<StatsUiState> = savingLogs.map { logs ->
+        val logsByDate = logs.groupBy { log ->
+            val cal = Calendar.getInstance().apply { timeInMillis = log.date }
+            getDateKey(cal)
+        }
+        StatsUiState(
+            logsByDate = logsByDate,
+            trendPoints = calculateTrendPoints(logsByDate)
+        )
+    }.flowOn(Dispatchers.Default).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), StatsUiState())
+
+    private fun calculateTrendPoints(logs: Map<String, List<SavingLogEntity>>): List<Float> {
+        val today = Calendar.getInstance()
+        val last7Days = (0 until 7).map { i ->
+            val cal = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -i) }
+            val key = getDateKey(cal)
+            logs[key]?.sumOf { it.amount } ?: 0.0
+        }.reversed()
+        
+        val max = last7Days.maxOrNull() ?: 1.0
+        val finalMax = if (max == 0.0) 1.0 else max
+        return last7Days.map { (it / finalMax).toFloat() }
+    }
 
     private fun calculateStreaks(logs: List<SavingLogEntity>): Pair<Int, Int> {
         if (logs.isEmpty()) return Pair(0, 0)

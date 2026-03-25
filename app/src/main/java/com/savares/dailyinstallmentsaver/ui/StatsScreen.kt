@@ -12,7 +12,6 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -31,7 +30,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.savares.dailyinstallmentsaver.R
 import com.savares.dailyinstallmentsaver.model.SavingLogEntity
 import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
@@ -59,10 +57,6 @@ fun StatsScreen(viewModel: InstallmentViewModel) {
             verticalArrangement = Arrangement.spacedBy(24.dp),
             contentPadding = PaddingValues(top = padding.calculateTopPadding() + 8.dp, bottom = 120.dp)
         ) {
-            item(key = "account_section") {
-                AccountMockSection()
-            }
-            
             item(key = "calendar_section") {
                 Text(
                     text = stringResource(R.string.monthly_calendar),
@@ -81,37 +75,6 @@ fun StatsScreen(viewModel: InstallmentViewModel) {
                 )
                 Spacer(Modifier.height(16.dp))
                 SimpleLineChart(uiState.trendPoints)
-            }
-        }
-    }
-}
-
-@Composable
-fun AccountMockSection() {
-    val haptic = LocalHapticFeedback.current
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ),
-        shape = RoundedCornerShape(24.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.AccountCircle, contentDescription = null, modifier = Modifier.size(48.dp))
-            Spacer(Modifier.width(16.dp))
-            Column {
-                Text(stringResource(R.string.account), fontWeight = FontWeight.Bold)
-                Text(stringResource(R.string.sync_status), style = MaterialTheme.typography.bodySmall)
-                Button(
-                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) },
-                    modifier = Modifier.padding(top = 8.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
-                ) {
-                    Text(stringResource(R.string.login_mock), fontSize = 12.sp)
-                }
             }
         }
     }
