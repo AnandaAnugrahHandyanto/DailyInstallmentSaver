@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,14 +40,15 @@ fun HistoryScreen(viewModel: InstallmentViewModel) {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.surface)
+                    .background(MaterialTheme.colorScheme.background)
                     .padding(padding)
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(vertical = 16.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp)
             ) {
+                // logs are already sorted (reversed) in ViewModel's savingLogs Flow
                 items(
-                    items = logs, // Already reversed in ViewModel
+                    items = logs,
                     key = { it.id },
                     contentType = { "history_item" }
                 ) { log ->
@@ -64,7 +66,14 @@ fun HistoryListItem(log: SavingLogEntity) {
     
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+        ),
+        border = androidx.compose.foundation.BorderStroke(
+            0.5.dp, 
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
+        )
     ) {
         Row(
             modifier = Modifier
@@ -80,7 +89,7 @@ fun HistoryListItem(log: SavingLogEntity) {
             Text(
                 "+ " + CurrencyUtil.formatCurrency(log.amount),
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFF2E7D32),
+                color = Color(0xFF4CAF50),
                 fontWeight = FontWeight.ExtraBold
             )
         }

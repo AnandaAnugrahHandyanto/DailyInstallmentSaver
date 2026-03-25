@@ -17,13 +17,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -39,11 +37,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.savares.dailyinstallmentsaver.ui.AddInstallmentScreen
-import com.savares.dailyinstallmentsaver.ui.DashboardScreen
-import com.savares.dailyinstallmentsaver.ui.HistoryScreen
-import com.savares.dailyinstallmentsaver.ui.SettingsScreen
-import com.savares.dailyinstallmentsaver.ui.StatsScreen
+import com.savares.dailyinstallmentsaver.ui.*
 import com.savares.dailyinstallmentsaver.ui.theme.DailyInstallmentSaverTheme
 import com.savares.dailyinstallmentsaver.util.LanguageConfig
 import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
@@ -55,12 +49,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             var languageCode by remember { mutableStateOf(LanguageConfig.getLanguage(this)) }
             val context = LocalContext.current
-            
-            // Notification Permission Request
+            val haptic = LocalHapticFeedback.current
+
+            // Notification Permission Launcher
             val permissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission()
             ) { isGranted -> }
 
+            // Trigger permission request on start
             LaunchedEffect(Unit) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -77,6 +73,7 @@ class MainActivity : ComponentActivity() {
                     DailyInstallmentApp(
                         currentLanguage = languageCode,
                         onLanguageChange = { newLang ->
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             LanguageConfig.setLanguage(this, newLang)
                             languageCode = newLang
                             recreate()
@@ -96,7 +93,6 @@ class MainActivity : ComponentActivity() {
 sealed class Screen(val route: String, val resourceId: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     object Dashboard : Screen("dashboard", R.string.dashboard_title, Icons.Default.Dashboard)
     object History : Screen("history", R.string.history_title, Icons.Default.History)
-    object Stats : Screen("stats", R.string.stats_title, Icons.Default.BarChart)
     object Settings : Screen("settings", R.string.settings_title, Icons.Default.Settings)
 }
 
@@ -109,12 +105,7 @@ fun DailyInstallmentApp(currentLanguage: String, onLanguageChange: (String) -> U
     val haptic = LocalHapticFeedback.current
 
     val items = remember {
-        listOf(
-            Screen.Dashboard,
-            Screen.History,
-            Screen.Stats,
-            Screen.Settings
-        )
+        listOf(Screen.Dashboard, Screen.History, Screen.Settings)
     }
 
     val showBottomBar = remember(currentDestination) {
@@ -127,69 +118,36 @@ fun DailyInstallmentApp(currentLanguage: String, onLanguageChange: (String) -> U
             startDestination = Screen.Dashboard.route,
             modifier = Modifier.fillMaxSize()
         ) {
-            composable(
-                route = Screen.Dashboard.route,
+            composable(Screen.Dashboard.route,
                 enterTransition = { fadeIn(tween(100)) },
                 exitTransition = { fadeOut(tween(100)) }
             ) {
-                DashboardScreen(
-                    viewModel = viewModel,
-                    onNavigateToAdd = { navController.navigate("add_installment") },
-                    onNavigateToEdit = { id -> navController.navigate("edit_installment/$id") },
-                    currentLanguage = currentLanguage,
-                    onLanguageChange = onLanguageChange
-                )
+                DashboardScreen(viewModel, { navController.navigate("add_installment") }, { id -> navController.navigate("edit_installment/$id") }, currentLanguage, onLanguageChange)
             }
-            composable(
-                route = Screen.History.route,
+            composable(Screen.History.route,
                 enterTransition = { fadeIn(tween(100)) },
                 exitTransition = { fadeOut(tween(100)) }
-            ) {
-                HistoryScreen(viewModel = viewModel)
-            }
-            composable(
-                route = Screen.Stats.route,
+            ) { HistoryScreen(viewModel) }
+            composable(Screen.Settings.route,
                 enterTransition = { fadeIn(tween(100)) },
                 exitTransition = { fadeOut(tween(100)) }
-            ) {
-                StatsScreen(viewModel = viewModel)
-            }
-            composable(
-                route = Screen.Settings.route,
-                enterTransition = { fadeIn(tween(100)) },
-                exitTransition = { fadeOut(tween(100)) }
-            ) {
-                SettingsScreen(
-                    viewModel = viewModel,
-                    currentLanguage = currentLanguage,
-                    onLanguageChange = onLanguageChange
-                )
-            }
-            composable(
-                route = "add_installment",
-                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(300)) },
-                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, tween(300)) }
-            ) {
-                AddInstallmentScreen(
-                    viewModel = viewModel,
-                    onNavigateBack = { navController.popBackStack() }
-                )
-            }
-            composable(
-                route = "edit_installment/{installmentId}",
-                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(300)) },
-                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, tween(300)) }
+            ) { SettingsScreen(viewModel, currentLanguage, onLanguageChange) }
+            
+            composable("add_installment",
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(250)) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, tween(250)) }
+            ) { AddInstallmentScreen(viewModel, onNavigateBack = { navController.popBackStack() }) }
+            
+            composable("edit_installment/{installmentId}",
+                enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(250)) },
+                exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down, tween(250)) }
             ) { backStackEntry ->
                 val id = backStackEntry.arguments?.getString("installmentId")?.toIntOrNull()
-                AddInstallmentScreen(
-                    viewModel = viewModel,
-                    installmentId = id,
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                AddInstallmentScreen(viewModel, id, onNavigateBack = { navController.popBackStack() })
             }
         }
 
-        // Floating Bottom Bar Overlay
+        // Floating Bottom Bar - High Performance Solid Version
         if (showBottomBar) {
             Box(
                 modifier = Modifier
@@ -198,54 +156,33 @@ fun DailyInstallmentApp(currentLanguage: String, onLanguageChange: (String) -> U
                     .padding(bottom = 12.dp, start = 32.dp, end = 32.dp)
             ) {
                 Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(76.dp),
+                    modifier = Modifier.fillMaxWidth().height(76.dp),
                     shape = RoundedCornerShape(24.dp),
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f),
+                    // High opacity for 60fps performance (no heavy blur)
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.98f), 
                     tonalElevation = 8.dp,
                     shadowElevation = 16.dp
                 ) {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        Box(modifier = Modifier.fillMaxSize().blur(10.dp))
-                    }
-                    
                     NavigationBar(
                         containerColor = Color.Transparent,
-                        tonalElevation = 0.dp,
                         modifier = Modifier.fillMaxSize()
                     ) {
                         items.forEach { screen ->
                             val selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
                             NavigationBarItem(
-                                icon = { 
-                                    Icon(
-                                        screen.icon, 
-                                        contentDescription = null,
-                                        modifier = Modifier.size(24.dp)
-                                    ) 
-                                },
-                                label = { 
-                                    Text(
-                                        stringResource(screen.resourceId), 
-                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp)
-                                    ) 
-                                },
+                                icon = { Icon(screen.icon, null, Modifier.size(24.dp)) },
+                                label = { Text(stringResource(screen.resourceId), fontSize = 11.sp) },
                                 selected = selected,
                                 colors = NavigationBarItemDefaults.colors(
                                     selectedIconColor = MaterialTheme.colorScheme.primary,
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                     selectedTextColor = MaterialTheme.colorScheme.primary,
-                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                     indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                                 ),
                                 onClick = {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     if (!selected) {
                                         navController.navigate(screen.route) {
-                                            popUpTo(navController.graph.findStartDestination().id) {
-                                                saveState = true
-                                            }
+                                            popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                             launchSingleTop = true
                                             restoreState = true
                                         }

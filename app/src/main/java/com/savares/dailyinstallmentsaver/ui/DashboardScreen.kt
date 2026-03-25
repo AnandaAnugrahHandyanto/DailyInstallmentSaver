@@ -13,6 +13,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,6 +26,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.savares.dailyinstallmentsaver.R
 import com.savares.dailyinstallmentsaver.model.InstallmentEntity
 import com.savares.dailyinstallmentsaver.util.CurrencyUtil
@@ -101,6 +104,17 @@ fun DashboardScreen(
                 TotalSavingCard(uiState.totalDailySaving, uiState.walletBreakdown)
             }
 
+            // Insights Section
+            item(key = "insights_section") {
+                InsightsSection(
+                    currentStreak = uiState.currentStreak,
+                    bestStreak = uiState.bestStreak,
+                    daysSavedThisWeek = uiState.daysSavedThisWeek,
+                    daysMissedThisWeek = uiState.daysMissedThisWeek,
+                    overallProgress = uiState.overallProgress
+                )
+            }
+
             if (uiState.installments.isNotEmpty()) {
                 item(key = "title_installments") {
                     Text(
@@ -161,6 +175,54 @@ fun DashboardScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+fun InsightsSection(
+    currentStreak: Int,
+    bestStreak: Int,
+    daysSavedThisWeek: Int,
+    daysMissedThisWeek: Int,
+    overallProgress: Int
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = stringResource(R.string.current_streak, currentStreak),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(Modifier.weight(1f))
+                Text(
+                    text = stringResource(R.string.best_streak, bestStreak),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+            
+            Spacer(Modifier.height(12.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            Spacer(Modifier.height(12.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Column {
+                    Text(stringResource(R.string.weekly_summary), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
+                    Text(stringResource(R.string.days_saved, daysSavedThisWeek), style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.days_missed, daysMissedThisWeek), style = MaterialTheme.typography.bodySmall)
+                }
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(stringResource(R.string.overall_progress, overallProgress), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+                }
+            }
+        }
     }
 }
 

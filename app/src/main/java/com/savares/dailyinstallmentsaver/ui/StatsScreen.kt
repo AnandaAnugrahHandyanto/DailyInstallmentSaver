@@ -1,6 +1,8 @@
 package com.savares.dailyinstallmentsaver.ui
 
+import android.os.Build
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -8,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
@@ -18,9 +21,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -47,17 +54,16 @@ fun StatsScreen(viewModel: InstallmentViewModel) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(padding)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
-            contentPadding = PaddingValues(vertical = 16.dp)
+            contentPadding = PaddingValues(top = padding.calculateTopPadding() + 8.dp, bottom = 120.dp)
         ) {
-            item(key = "account_section", contentType = "account") {
+            item(key = "account_section") {
                 AccountMockSection()
             }
             
-            item(key = "calendar_section", contentType = "calendar") {
+            item(key = "calendar_section") {
                 Text(
                     text = stringResource(R.string.monthly_calendar),
                     style = MaterialTheme.typography.titleMedium,
@@ -67,7 +73,7 @@ fun StatsScreen(viewModel: InstallmentViewModel) {
                 CalendarPagerView(uiState.logsByDate, viewModel)
             }
 
-            item(key = "trend_section", contentType = "chart") {
+            item(key = "trend_section") {
                 Text(
                     text = stringResource(R.string.savings_trend),
                     style = MaterialTheme.typography.titleMedium,
@@ -82,9 +88,13 @@ fun StatsScreen(viewModel: InstallmentViewModel) {
 
 @Composable
 fun AccountMockSection() {
+    val haptic = LocalHapticFeedback.current
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        shape = RoundedCornerShape(24.dp)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -96,7 +106,7 @@ fun AccountMockSection() {
                 Text(stringResource(R.string.account), fontWeight = FontWeight.Bold)
                 Text(stringResource(R.string.sync_status), style = MaterialTheme.typography.bodySmall)
                 Button(
-                    onClick = { /* Mock Login */ },
+                    onClick = { haptic.performHapticFeedback(HapticFeedbackType.LongPress) },
                     modifier = Modifier.padding(top = 8.dp),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)
                 ) {
@@ -111,58 +121,69 @@ fun AccountMockSection() {
 fun CalendarPagerView(logsByDate: Map<String, List<SavingLogEntity>>, viewModel: InstallmentViewModel) {
     val pagerState = rememberPagerState(initialPage = 500, pageCount = { 1000 })
     val coroutineScope = rememberCoroutineScope()
+    val haptic = LocalHapticFeedback.current
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(28.dp))
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            val currentMonth = remember(pagerState.currentPage) {
-                Calendar.getInstance().apply { add(Calendar.MONTH, pagerState.currentPage - 500) }
-            }
-            val monthName = remember(currentMonth) {
-                SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(currentMonth.time)
-            }
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f))
+                .then(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Modifier.blur(15.dp) else Modifier)
+        )
+        
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.Transparent,
+            shape = RoundedCornerShape(28.dp),
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                val currentMonth = remember(pagerState.currentPage) {
+                    Calendar.getInstance().apply { add(Calendar.MONTH, pagerState.currentPage - 500) }
+                }
+                val monthName = remember(currentMonth) {
+                    SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(currentMonth.time)
+                }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = {
-                    coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
-                }) {
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.prev_month))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
+                    }
+                    
+                    Text(monthName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
+                    }) {
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                    }
                 }
                 
-                AnimatedContent(
-                    targetState = monthName,
-                    transitionSpec = {
-                        (fadeIn() + slideInHorizontally { it / 2 }).togetherWith(fadeOut() + slideOutHorizontally { -it / 2 })
-                    },
-                    label = "month_anim"
-                ) { targetName ->
-                    Text(targetName, fontWeight = FontWeight.Bold)
-                }
+                Spacer(Modifier.height(8.dp))
 
-                IconButton(onClick = {
-                    coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
-                }) {
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.next_month))
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top,
+                    beyondViewportPageCount = 1
+                ) { page ->
+                    val monthCal = remember(page) {
+                        Calendar.getInstance().apply { add(Calendar.MONTH, page - 500) }
+                    }
+                    MonthGrid(monthCal, logsByDate, viewModel)
                 }
-            }
-            
-            Spacer(Modifier.height(8.dp))
-
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Top
-            ) { page ->
-                val monthCal = remember(page) {
-                    Calendar.getInstance().apply { add(Calendar.MONTH, page - 500) }
-                }
-                MonthGrid(monthCal, logsByDate, viewModel)
             }
         }
     }
@@ -172,7 +193,9 @@ fun CalendarPagerView(logsByDate: Map<String, List<SavingLogEntity>>, viewModel:
 fun MonthGrid(calendar: Calendar, logsByDate: Map<String, List<SavingLogEntity>>, viewModel: InstallmentViewModel) {
     val daysInMonth = remember(calendar) { calendar.getActualMaximum(Calendar.DAY_OF_MONTH) }
     val firstDayOfWeek = remember(calendar) {
-        (calendar.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, 1) }.get(Calendar.DAY_OF_WEEK)
+        (calendar.clone() as Calendar).apply { 
+            set(Calendar.DAY_OF_MONTH, 1) 
+        }.get(Calendar.DAY_OF_WEEK)
     }
     val offset = firstDayOfWeek - 1
     
@@ -181,28 +204,33 @@ fun MonthGrid(calendar: Calendar, logsByDate: Map<String, List<SavingLogEntity>>
         calendar.get(Calendar.MONTH) == today.get(Calendar.MONTH) &&
         calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR)
     }
-    val currentDay = today.get(Calendar.DAY_OF_MONTH)
+    val currentDayNum = today.get(Calendar.DAY_OF_MONTH)
 
-    Column {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         for (w in 0 until 6) {
+            val startDay = w * 7 - offset + 1
+            if (startDay > daysInMonth) break
+            
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 for (d in 0 until 7) {
                     val dayNum = w * 7 + d - offset + 1
                     if (dayNum in 1..daysInMonth) {
-                        val isToday = isCurrentMonth && dayNum == currentDay
+                        val isToday = isCurrentMonth && dayNum == currentDayNum
                         val dayCal = remember(calendar, dayNum) {
                             (calendar.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, dayNum) }
                         }
                         val dateKey = remember(dayCal) { viewModel.getDateKey(dayCal) }
                         val isSaved = logsByDate.containsKey(dateKey)
+                        val isPast = (calendar.get(Calendar.YEAR) < today.get(Calendar.YEAR)) ||
+                                     (calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) && calendar.get(Calendar.MONTH) < today.get(Calendar.MONTH)) ||
+                                     (isCurrentMonth && dayNum < currentDayNum)
                         
-                        DayItem(dayNum, isToday, isSaved, isCurrentMonth && dayNum < currentDay)
+                        DayItem(dayNum, isToday, isSaved, isPast)
                     } else {
                         Spacer(Modifier.size(40.dp))
                     }
                 }
             }
-            if (w * 7 - offset + 1 > daysInMonth) break
         }
     }
 }
@@ -213,8 +241,7 @@ fun DayItem(dayNum: Int, isToday: Boolean, isSaved: Boolean, isPast: Boolean) {
         modifier = Modifier
             .size(40.dp)
             .background(
-                if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) 
-                else Color.Transparent, 
+                if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent,
                 CircleShape
             ),
         contentAlignment = Alignment.Center
@@ -222,13 +249,26 @@ fun DayItem(dayNum: Int, isToday: Boolean, isSaved: Boolean, isPast: Boolean) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = dayNum.toString(),
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                fontWeight = if (isToday) FontWeight.ExtraBold else FontWeight.Normal
             )
-            if (isSaved) {
-                Icon(Icons.Default.Check, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(12.dp))
-            } else if (isPast) {
-                Icon(Icons.Default.Close, null, tint = Color.Red.copy(alpha = 0.5f), modifier = Modifier.size(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (isSaved) {
+                    Icon(
+                        Icons.Default.Check, 
+                        null, 
+                        tint = if (isToday) Color(0xFF4CAF50) else Color(0xFF4CAF50).copy(alpha = 0.8f), 
+                        modifier = Modifier.size(12.dp)
+                    )
+                } else if (isPast) {
+                    Icon(
+                        Icons.Default.Close, 
+                        null, 
+                        tint = Color.Red.copy(alpha = 0.6f), 
+                        modifier = Modifier.size(10.dp)
+                    )
+                }
             }
         }
     }
@@ -236,6 +276,7 @@ fun DayItem(dayNum: Int, isToday: Boolean, isSaved: Boolean, isPast: Boolean) {
 
 @Composable
 fun SimpleLineChart(points: List<Float>) {
+    val primaryColor = MaterialTheme.colorScheme.primary
     Canvas(modifier = Modifier.fillMaxWidth().height(150.dp)) {
         if (points.isEmpty()) return@Canvas
         
@@ -243,19 +284,19 @@ fun SimpleLineChart(points: List<Float>) {
         val height = size.height
         val stepX = width / (points.size - 1).coerceAtLeast(1)
         
-        drawLine(Color.Gray.copy(alpha = 0.3f), Offset(0f, height), Offset(width, height), strokeWidth = 2f)
+        drawLine(Color.Gray.copy(alpha = 0.2f), Offset(0f, height), Offset(width, height), strokeWidth = 1f)
         
         for (i in 0 until points.size - 1) {
             val startX = i * stepX
-            val startY = height - (points[i] * height * 0.8f) - 10f
+            val startY = height - (points[i] * height * 0.7f) - 20f
             val endX = (i + 1) * stepX
-            val endY = height - (points[i+1] * height * 0.8f) - 10f
+            val endY = height - (points[i+1] * height * 0.7f) - 20f
             
             drawLine(
-                color = Color(0xFF2196F3),
+                color = primaryColor,
                 start = Offset(startX, startY),
                 end = Offset(endX, endY),
-                strokeWidth = 6f,
+                strokeWidth = 4f,
                 cap = StrokeCap.Round
             )
         }

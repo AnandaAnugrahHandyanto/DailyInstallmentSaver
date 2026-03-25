@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.4.0] - 2026-03-26
+
+### Removed
+- **Statistics Feature**: Removed the complex Statistics screen and chart components to simplify the app experience.
+
+### Added
+- **Lightweight Insight System**: Integrated quick insights directly into the Dashboard.
+- **Streak System**: Track and display current and best saving streaks based on daily logs.
+- **Weekly Summary**: Added text-based summary of days saved and missed in the current week.
+- **Overall Progress**: Added an aggregate progress percentage for all active installments.
+
+### Improved
+- **Architecture**: Moved insight and streak calculation logic from UI to ViewModel for better performance and separation of concerns.
+- **Navigation**: Simplified bottom navigation by removing the Stats tab.
+
 ## [1.3.0] - 2026-03-26
 
 ### Added

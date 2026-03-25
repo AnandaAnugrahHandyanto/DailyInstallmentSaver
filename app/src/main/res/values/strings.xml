@@ -55,4 +55,12 @@
     <string name="delete_installment">Delete Installment</string>
     <string name="delete_confirm_msg">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
     <string name="cancel">Cancel</string>
+
+    <!-- Insight Strings -->
+    <string name="current_streak">Current Streak: %1$d days</string>
+    <string name="best_streak">Best Streak: %1$d days</string>
+    <string name="weekly_summary">Weekly Summary</string>
+    <string name="days_saved">Days Saved: %1$d</string>
+    <string name="days_missed">Days Missed: %1$d</string>
+    <string name="overall_progress">Overall Progress: %1$d%%</string>
 </resources>
