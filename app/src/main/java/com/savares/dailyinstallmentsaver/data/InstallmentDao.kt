@@ -44,4 +44,7 @@ interface InstallmentDao {
 
     @Query("DELETE FROM saving_logs")
     suspend fun deleteAllLogs()
+    
+    @Query("DELETE FROM saving_logs WHERE installmentName = :name")
+    suspend fun deleteLogsByInstallmentName(name: String)
 }

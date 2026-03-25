@@ -5,7 +5,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
@@ -15,7 +17,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -34,6 +39,17 @@ fun DashboardScreen(
     onLanguageChange: (String) -> Unit
 ) {
     val uiState by viewModel.dashboardUiState.collectAsState()
+    val haptic = LocalHapticFeedback.current
+    val listState = rememberLazyListState()
+    
+    var installmentToDelete by remember { mutableStateOf<InstallmentEntity?>(null) }
+
+    // FAB Visibility Logic - Optimized for max performance
+    val isFabVisible by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex == 0 || listState.firstVisibleItemScrollOffset < 150
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -50,30 +66,43 @@ fun DashboardScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onNavigateToAdd,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
+            AnimatedVisibility(
+                visible = isFabVisible,
+                enter = scaleIn() + fadeIn(),
+                exit = scaleOut() + fadeOut()
             ) {
-                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_installment))
+                FloatingActionButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onNavigateToAdd()
+                    },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.padding(bottom = 90.dp) // Clear of navbar
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_installment))
+                }
             }
         }
     ) { padding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(padding)
+                .background(MaterialTheme.colorScheme.background)
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp)
+            contentPadding = PaddingValues(
+                top = padding.calculateTopPadding() + 8.dp, 
+                bottom = 130.dp
+            )
         ) {
-            item(key = "total_card", contentType = "summary") {
+            item(key = "total_card") {
                 TotalSavingCard(uiState.totalDailySaving, uiState.walletBreakdown)
             }
 
             if (uiState.installments.isNotEmpty()) {
-                item(key = "title_installments", contentType = "header") {
+                item(key = "title_installments") {
                     Text(
                         text = "My Installments",
                         style = MaterialTheme.typography.titleMedium,
@@ -83,27 +112,63 @@ fun DashboardScreen(
                 }
                 items(
                     items = uiState.installments,
-                    key = { it.id },
-                    contentType = { "installment" }
+                    key = { it.id }
                 ) { installment ->
                     InstallmentItem(
                         installment = installment,
                         viewModel = viewModel,
-                        onEdit = { onNavigateToEdit(installment.id) }
+                        onEdit = { 
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onNavigateToEdit(installment.id) 
+                        },
+                        onDelete = {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            installmentToDelete = installment
+                        }
                     )
                 }
             } else {
-                item(key = "empty_state", contentType = "empty") {
+                item(key = "empty_state") {
                     EmptyState()
                 }
             }
         }
     }
+
+    if (installmentToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { installmentToDelete = null },
+            title = { Text(stringResource(R.string.delete_installment)) },
+            text = { Text(stringResource(R.string.delete_confirm_msg, installmentToDelete?.name ?: "")) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        installmentToDelete?.let { viewModel.deleteInstallment(it) }
+                        installmentToDelete = null
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text(stringResource(R.string.delete))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    installmentToDelete = null 
+                }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
 }
 
 @Composable
 fun LanguageToggleButton(currentLanguage: String, onLanguageChange: (String) -> Unit) {
+    val haptic = LocalHapticFeedback.current
     TextButton(onClick = {
+        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         val newLang = if (currentLanguage == "en") "in" else "en"
         onLanguageChange(newLang)
     }) {
@@ -125,18 +190,19 @@ fun LanguageToggleButton(currentLanguage: String, onLanguageChange: (String) -> 
 @Composable
 fun TotalSavingCard(total: Double, breakdown: Map<String, Double>) {
     Card(
-        modifier = Modifier.fillMaxWidth().animateContentSize(),
+        modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
+            val formattedTotal = remember(total) { CurrencyUtil.formatCurrency(total) }
             Text(
                 text = stringResource(R.string.total_daily_saving),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
             )
             Text(
-                text = CurrencyUtil.formatCurrency(total),
+                text = formattedTotal,
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onPrimary
@@ -148,21 +214,24 @@ fun TotalSavingCard(total: Double, breakdown: Map<String, Double>) {
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 breakdown.forEach { (wallet, amount) ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = wallet,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Text(
-                            text = CurrencyUtil.formatCurrency(amount),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
+                    key(wallet) {
+                        val formattedAmount = remember(amount) { CurrencyUtil.formatCurrency(amount) }
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = wallet,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                            Text(
+                                text = formattedAmount,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
                     }
                 }
             }
@@ -174,25 +243,36 @@ fun TotalSavingCard(total: Double, breakdown: Map<String, Double>) {
 fun InstallmentItem(
     installment: InstallmentEntity,
     viewModel: InstallmentViewModel,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onDelete: () -> Unit
 ) {
+    val haptic = LocalHapticFeedback.current
     val daily = remember(installment.amount, installment.savedAmount, installment.dueDate) {
         viewModel.calculateDailySaving(installment)
     }
+    val formattedDaily = remember(daily) { CurrencyUtil.formatCurrency(daily) }
+    
     val daysLeft = remember(installment.dueDate) {
         viewModel.calculateDaysLeft(installment.dueDate)
     }
     val isSavedToday = remember(installment.lastSavedDate) {
         viewModel.isSavedToday(installment)
     }
-    val progress = remember(installment.savedAmount, installment.amount) {
-        (installment.savedAmount / installment.amount).coerceIn(0.0, 1.0).toFloat()
+    val progress by remember(installment.savedAmount, installment.amount) {
+        derivedStateOf { (installment.savedAmount / installment.amount).coerceIn(0.0, 1.0).toFloat() }
     }
 
     Card(
-        modifier = Modifier.fillMaxWidth().animateContentSize(),
+        modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        shape = RoundedCornerShape(24.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp, 
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+        )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -204,7 +284,8 @@ fun InstallmentItem(
                     Text(
                         text = installment.name,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = installment.wallet,
@@ -213,18 +294,21 @@ fun InstallmentItem(
                     )
                 }
                 Row {
-                    IconButton(onClick = onEdit) {
+                    IconButton(onClick = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onEdit()
+                    }) {
                         Icon(
                             Icons.Default.Edit,
                             contentDescription = stringResource(R.string.edit),
-                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
-                    IconButton(onClick = { viewModel.deleteInstallment(installment) }) {
+                    IconButton(onClick = onDelete) {
                         Icon(
                             Icons.Default.Delete,
                             contentDescription = stringResource(R.string.delete),
-                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 }
@@ -236,23 +320,29 @@ fun InstallmentItem(
                 progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(8.dp),
+                    .height(12.dp)
+                    .clip(CircleShape),
                 strokeCap = androidx.compose.ui.graphics.StrokeCap.Round,
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
             )
+            
+            val formattedSaved = remember(installment.savedAmount) { CurrencyUtil.formatCurrency(installment.savedAmount) }
+            val formattedTarget = remember(installment.amount) { CurrencyUtil.formatCurrency(installment.amount) }
+            val progressPercent = remember(progress) { (progress * 100).toInt() }
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 6.dp),
+                    .padding(top = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
                     text = stringResource(
                         R.string.progress,
-                        CurrencyUtil.formatCurrency(installment.savedAmount),
-                        CurrencyUtil.formatCurrency(installment.amount),
-                        (progress * 100).toInt()
+                        formattedSaved,
+                        formattedTarget,
+                        progressPercent
                     ),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -267,10 +357,12 @@ fun InstallmentItem(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Optimized Glass Section: High Contrast, No real-time blur for 60fps
             Surface(
-                color = MaterialTheme.colorScheme.surface,
-                shape = MaterialTheme.shapes.medium,
-                tonalElevation = 1.dp
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
+                shape = RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
             ) {
                 Row(
                     modifier = Modifier
@@ -286,50 +378,37 @@ fun InstallmentItem(
                             color = MaterialTheme.colorScheme.secondary
                         )
                         Text(
-                            text = CurrencyUtil.formatCurrency(daily),
+                            text = formattedDaily,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
+                            fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
                     
                     Button(
-                        onClick = { viewModel.markAsSaved(installment) },
+                        onClick = { 
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                            viewModel.markAsSaved(installment) 
+                        },
                         enabled = !isSavedToday,
-                        shape = MaterialTheme.shapes.medium,
+                        shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = if (isSavedToday) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
-                            disabledContainerColor = Color(0xFF4CAF50).copy(alpha = 0.8f),
+                            disabledContainerColor = Color(0xFF4CAF50).copy(alpha = 0.9f),
                             disabledContentColor = Color.White
-                        )
+                        ),
+                        elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                     ) {
-                        AnimatedContent(targetState = isSavedToday, label = "saved_status") { saved ->
-                            if (saved) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(stringResource(R.string.saved_today))
-                                }
-                            } else {
-                                Text(stringResource(R.string.mark_as_saved))
+                        if (isSavedToday) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(stringResource(R.string.saved_today))
                             }
+                        } else {
+                            Text(stringResource(R.string.mark_as_saved))
                         }
                     }
-                }
-            }
-
-            if (!isSavedToday && daysLeft > 0) {
-                 val isSignificantlyHigher = remember(daily, installment.amount) {
-                     daily > (installment.amount / 30)
-                 }
-                 if (isSignificantlyHigher) {
-                     Spacer(modifier = Modifier.height(8.dp))
-                     Text(
-                        text = stringResource(R.string.suggestion_missed, CurrencyUtil.formatCurrency(daily)),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error,
-                        fontWeight = FontWeight.Medium
-                    )
                 }
             }
         }

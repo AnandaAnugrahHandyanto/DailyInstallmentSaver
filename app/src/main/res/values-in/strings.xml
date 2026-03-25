@@ -51,4 +51,8 @@
 
     <string name="widget_title">Target Hari Ini</string>
     <string name="widget_empty">Tambah cicilan untuk melihat target</string>
+
+    <string name="delete_installment">Hapus Cicilan</string>
+    <string name="delete_confirm_msg">Apakah Anda yakin ingin menghapus \"%1$s\"? Tindakan ini tidak dapat dibatalkan.</string>
+    <string name="cancel">Batal</string>
 </resources>

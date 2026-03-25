@@ -51,4 +51,8 @@
 
     <string name="widget_title">Today\'s Goal</string>
     <string name="widget_empty">Add installment to see goal</string>
+
+    <string name="delete_installment">Delete Installment</string>
+    <string name="delete_confirm_msg">Are you sure you want to delete \"%1$s\"? This action cannot be undone.</string>
+    <string name="cancel">Cancel</string>
 </resources>

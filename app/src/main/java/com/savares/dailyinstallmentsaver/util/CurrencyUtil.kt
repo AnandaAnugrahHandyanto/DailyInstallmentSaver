@@ -4,10 +4,18 @@ import java.text.NumberFormat
 import java.util.*
 
 object CurrencyUtil {
+    private val localeID = Locale("id", "ID")
+    
+    // ThreadLocal is faster than synchronization for NumberFormat
+    private val numberFormatThreadLocal = object : ThreadLocal<NumberFormat>() {
+        override fun initialValue(): NumberFormat {
+            return NumberFormat.getCurrencyInstance(localeID).apply {
+                maximumFractionDigits = 0
+            }
+        }
+    }
+
     fun formatCurrency(amount: Double): String {
-        val localeID = Locale("id", "ID")
-        val numberFormat = NumberFormat.getCurrencyInstance(localeID)
-        numberFormat.maximumFractionDigits = 0
-        return numberFormat.format(amount).replace("Rp", "Rp ")
+        return numberFormatThreadLocal.get()?.format(amount)?.replace("Rp", "Rp ") ?: ""
     }
 }

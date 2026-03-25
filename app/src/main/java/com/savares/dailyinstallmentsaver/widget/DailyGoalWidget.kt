@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit
 
 class DailyGoalWidget : GlanceAppWidget() {
 
-    override suspend fun provideContent(context: Context, id: GlanceId) {
+    override suspend fun provideGlance(context: Context, id: GlanceId) {
         val dao = AppDatabase.getDatabase(context).installmentDao()
         val installments = dao.getAll().first()
         
