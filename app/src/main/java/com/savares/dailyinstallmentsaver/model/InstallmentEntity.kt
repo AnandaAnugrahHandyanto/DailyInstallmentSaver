@@ -11,5 +11,6 @@ data class InstallmentEntity(
     val dueDate: Long,
     val wallet: String,
     val savedAmount: Double = 0.0,
-    val lastSavedDate: Long = 0L // Timestamp of last "Mark as Saved"
+    val lastSavedDate: Long = 0L, // Timestamp of last "Mark as Saved"
+    val createdAt: Long = System.currentTimeMillis()
 )

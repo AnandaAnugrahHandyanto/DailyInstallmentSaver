@@ -1,10 +1,10 @@
 <resources>
     <string name="app_name">Daily Installment Saver</string>
     <string name="dashboard_title">Pencatat Cicilan Harian</string>
-    <string name="total_daily_saving">Total Tabungan Harian</string>
+    <string name="total_daily_saving">Rencana Tabungan Hari Ini</string>
     <string name="add_installment">Tambah Cicilan</string>
     <string name="installment_name">Nama Cicilan</string>
-    <string name="amount">Nominal</string>
+    <string name="amount">Target Nominal</string>
     <string name="wallet">Dompet (misal: Dana, Gopay)</string>
     <string name="due_date">Tanggal Jatuh Tempo</string>
     <string name="save">Simpan</string>
@@ -22,4 +22,6 @@
     <string name="smart_suggestion">Saran Pintar</string>
     <string name="suggestion_text">Hari ini kamu sebaiknya menabung %1$s agar tetap sesuai target.</string>
     <string name="suggestion_missed">Kamu melewatkan beberapa hari! Untuk mengejar, tabung %1$s hari ini.</string>
+    <string name="history_title">Riwayat Terbaru</string>
+    <string name="no_history">Belum ada riwayat tabungan.</string>
 </resources>

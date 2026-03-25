@@ -2,20 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.1.0] - 2024-05-22
+## [1.1.0] - 2024-05-20
 
 ### Added
-- **Smart Suggestion System**: Recommends daily saving amount, highlighting if user missed previous days.
-- **Mark as Saved**: Button to track daily savings per installment.
-- **Progress Tracking**: Visual progress bar and percentage for each installment.
-- **Wallet Breakdown**: Displays total daily savings categorized by wallet (Dana, Gopay, etc.).
-- **Localization Support**: Full Indonesian and English support with persistent setting.
+- **Mark as Saved** feature: Users can now track their daily progress by marking installments as saved for the day.
+- **Saving History**: A new section on the dashboard to view the last 10 saving activities.
+- **Smart Adjustment System**: Daily saving amounts now automatically redistribute if a day is missed, helping users stay on target.
+- **Progress Tracking**: Visual progress bars and percentage indicators for each installment.
+- **Daily Summary Card**: A prominent card at the top of the dashboard showing the total saving plan for the day, broken down by wallet.
 
-### Fixed
-- **Currency Formatting**: Updated to proper Indonesian format (e.g., Rp 3.440).
-- **Language Toggle**: Fixed persistence and immediate UI update without full app restart.
-- **Database Schema**: Updated to version 2 to support saving progress and tracking dates.
-
-### Changed
-- **UI Improvements**: Enhanced Dashboard with cards, better spacing, and improved readability for daily calculations.
-- **Architecture**: Refined MVVM implementation in `InstallmentViewModel`.
+### Improved
+- **Dashboard UI**: Cleaner layout with improved spacing, grouping, and Material 3 cards.
+- **Language Support**: Updated strings for both English and Indonesian.
+- **Database Schema**: Incremented to version 3 to support saving logs and metadata.

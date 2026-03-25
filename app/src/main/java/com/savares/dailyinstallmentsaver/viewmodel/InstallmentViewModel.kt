@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.savares.dailyinstallmentsaver.data.AppDatabase
 import com.savares.dailyinstallmentsaver.model.InstallmentEntity
-import kotlinx.coroutines.flow.MutableStateFlow
+import com.savares.dailyinstallmentsaver.model.SavingLogEntity
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -19,6 +19,13 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
     private val dao = AppDatabase.getDatabase(app).installmentDao()
 
     val installments: StateFlow<List<InstallmentEntity>> = dao.getAll()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    val savingLogs: StateFlow<List<SavingLogEntity>> = dao.getAllLogs()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -68,6 +75,13 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
                 lastSavedDate = System.currentTimeMillis()
             )
             dao.update(updated)
+            
+            // Add to logs
+            dao.insertLog(SavingLogEntity(
+                installmentName = installment.name,
+                date = System.currentTimeMillis(),
+                amount = daily
+            ))
         }
     }
 
@@ -90,14 +104,11 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
                 lastSaved.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
     }
 
-    // Smart Suggestion Logic
+    // Smart Suggestion Logic: Basic amount if it was never missed
     fun getSmartSuggestion(installment: InstallmentEntity): Double {
-        val daysLeft = calculateDaysLeft(installment.dueDate)
-        if (daysLeft <= 0) return 0.0
-        
-        // Basic daily needed
-        val basicDaily = installment.amount / (TimeUnit.MILLISECONDS.toDays(installment.dueDate - System.currentTimeMillis() + (daysLeft * 86400000L)).coerceAtLeast(1)) // Simplified
-        // Actually, let's just use the current daily needed as the suggestion
+        val creationDate = installment.id.toLong() // Not ideal, but assuming ID relates to creation or use current
+        // For a more realistic "smart" suggestion, we compare daily needed vs original daily needed
+        // But to keep it simple as requested:
         return calculateDailySaving(installment)
     }
 }
