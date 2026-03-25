@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.savares.dailyinstallmentsaver.data.AppDatabase
+import com.savares.dailyinstallmentsaver.data.InstallmentDao
 import com.savares.dailyinstallmentsaver.model.InstallmentEntity
 import com.savares.dailyinstallmentsaver.model.SavingLogEntity
 import kotlinx.coroutines.flow.*
@@ -25,6 +26,8 @@ data class StatsUiState(
 class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
 
     private val dao = AppDatabase.getDatabase(app).installmentDao()
+
+    fun getDao(): InstallmentDao = dao
 
     val installments: StateFlow<List<InstallmentEntity>> = dao.getAll()
         .stateIn(

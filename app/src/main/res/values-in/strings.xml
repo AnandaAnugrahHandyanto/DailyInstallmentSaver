@@ -3,6 +3,7 @@
     <string name="dashboard_title">Dasbor</string>
     <string name="history_title">Riwayat</string>
     <string name="stats_title">Statistik</string>
+    <string name="settings_title">Pengaturan</string>
     <string name="total_daily_saving">Rencana Tabungan Hari Ini</string>
     <string name="add_installment">Tambah Cicilan</string>
     <string name="edit_installment">Ubah Cicilan</string>
@@ -16,7 +17,8 @@
     <string name="delete">Hapus</string>
     <string name="daily_needed">Harian</string>
     <string name="notification_title">Pengingat Menabung Harian</string>
-    <string name="notification_content">Hari ini kamu perlu menabung %1$s (%2$s)</string>
+    <string name="notification_missed_title">Jangan Lupa! ⚠️</string>
+    <string name="notification_content">Hari ini kamu perlu menabung %1$s</string>
     <string name="language_toggle">EN/ID</string>
     <string name="empty_list">Belum ada cicilan. Tambah sekarang!</string>
     <string name="pick_date">Pilih Tanggal</string>
@@ -35,4 +37,18 @@
     <string name="login_mock">Masuk (Mock)</string>
     <string name="prev_month">Seb.</string>
     <string name="next_month">Ber.</string>
+
+    <string name="backup_restore">Cadangkan &amp; Pulihkan</string>
+    <string name="backup_data">Cadangkan Data</string>
+    <string name="restore_data">Pulihkan Data</string>
+    <string name="notifications">Notifikasi</string>
+    <string name="enable_notifications">Aktifkan Pengingat Harian</string>
+    <string name="language">Bahasa</string>
+    <string name="backup_success">Cadangan berhasil disimpan</string>
+    <string name="backup_failed">Cadangan gagal</string>
+    <string name="restore_success">Data berhasil dipulihkan</string>
+    <string name="restore_failed">Pemulihan gagal</string>
+
+    <string name="widget_title">Target Hari Ini</string>
+    <string name="widget_empty">Tambah cicilan untuk melihat target</string>
 </resources>

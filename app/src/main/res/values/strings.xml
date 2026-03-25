@@ -3,6 +3,7 @@
     <string name="dashboard_title">Dashboard</string>
     <string name="history_title">History</string>
     <string name="stats_title">Statistics</string>
+    <string name="settings_title">Settings</string>
     <string name="total_daily_saving">Today\'s Saving Plan</string>
     <string name="add_installment">Add Installment</string>
     <string name="edit_installment">Edit Installment</string>
@@ -16,7 +17,8 @@
     <string name="delete">Delete</string>
     <string name="daily_needed">Daily Needed</string>
     <string name="notification_title">Daily Saving Reminder</string>
-    <string name="notification_content">Today you need to save %1$s (%2$s)</string>
+    <string name="notification_missed_title">Don\'t Forget! ⚠️</string>
+    <string name="notification_content">Today you need to save %1$s</string>
     <string name="language_toggle">EN/ID</string>
     <string name="empty_list">No installments yet. Add one!</string>
     <string name="pick_date">Pick Date</string>
@@ -35,4 +37,18 @@
     <string name="login_mock">Login (Mock)</string>
     <string name="prev_month">Prev</string>
     <string name="next_month">Next</string>
+
+    <string name="backup_restore">Backup &amp; Restore</string>
+    <string name="backup_data">Backup Data</string>
+    <string name="restore_data">Restore Data</string>
+    <string name="notifications">Notifications</string>
+    <string name="enable_notifications">Enable Daily Reminder</string>
+    <string name="language">Language</string>
+    <string name="backup_success">Backup saved successfully</string>
+    <string name="backup_failed">Backup failed</string>
+    <string name="restore_success">Data restored successfully</string>
+    <string name="restore_failed">Restore failed</string>
+
+    <string name="widget_title">Today\'s Goal</string>
+    <string name="widget_empty">Add installment to see goal</string>
 </resources>

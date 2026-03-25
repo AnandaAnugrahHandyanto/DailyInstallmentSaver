@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -25,6 +26,7 @@ import androidx.navigation.compose.rememberNavController
 import com.savares.dailyinstallmentsaver.ui.AddInstallmentScreen
 import com.savares.dailyinstallmentsaver.ui.DashboardScreen
 import com.savares.dailyinstallmentsaver.ui.HistoryScreen
+import com.savares.dailyinstallmentsaver.ui.SettingsScreen
 import com.savares.dailyinstallmentsaver.ui.StatsScreen
 import com.savares.dailyinstallmentsaver.ui.theme.DailyInstallmentSaverTheme
 import com.savares.dailyinstallmentsaver.util.LanguageConfig
@@ -64,6 +66,7 @@ sealed class Screen(val route: String, val resourceId: Int, val icon: androidx.c
     object Dashboard : Screen("dashboard", R.string.dashboard_title, Icons.Default.Dashboard)
     object History : Screen("history", R.string.history_title, Icons.Default.History)
     object Stats : Screen("stats", R.string.stats_title, Icons.Default.BarChart)
+    object Settings : Screen("settings", R.string.settings_title, Icons.Default.Settings)
 }
 
 @Composable
@@ -76,7 +79,8 @@ fun DailyInstallmentApp(currentLanguage: String, onLanguageChange: (String) -> U
     val items = listOf(
         Screen.Dashboard,
         Screen.History,
-        Screen.Stats
+        Screen.Stats,
+        Screen.Settings
     )
 
     val showBottomBar = currentDestination?.route in items.map { it.route }
@@ -124,6 +128,13 @@ fun DailyInstallmentApp(currentLanguage: String, onLanguageChange: (String) -> U
             }
             composable(Screen.Stats.route) {
                 StatsScreen(viewModel = viewModel)
+            }
+            composable(Screen.Settings.route) {
+                SettingsScreen(
+                    viewModel = viewModel,
+                    currentLanguage = currentLanguage,
+                    onLanguageChange = onLanguageChange
+                )
             }
             composable("add_installment") {
                 AddInstallmentScreen(
