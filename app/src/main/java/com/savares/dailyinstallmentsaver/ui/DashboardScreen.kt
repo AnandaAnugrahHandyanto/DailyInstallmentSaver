@@ -33,9 +33,7 @@ fun DashboardScreen(
     currentLanguage: String,
     onLanguageChange: (String) -> Unit
 ) {
-    val installments by viewModel.installments.collectAsState()
-    val totalSaving by viewModel.totalDailySaving.collectAsState()
-    val walletBreakdown by viewModel.walletBreakdown.collectAsState()
+    val uiState by viewModel.dashboardUiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -70,12 +68,12 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp)
         ) {
-            item(key = "total_card") {
-                TotalSavingCard(totalSaving, walletBreakdown)
+            item(key = "total_card", contentType = "summary") {
+                TotalSavingCard(uiState.totalDailySaving, uiState.walletBreakdown)
             }
 
-            if (installments.isNotEmpty()) {
-                item(key = "title_installments") {
+            if (uiState.installments.isNotEmpty()) {
+                item(key = "title_installments", contentType = "header") {
                     Text(
                         text = "My Installments",
                         style = MaterialTheme.typography.titleMedium,
@@ -83,7 +81,11 @@ fun DashboardScreen(
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
-                items(installments, key = { it.id }) { installment ->
+                items(
+                    items = uiState.installments,
+                    key = { it.id },
+                    contentType = { "installment" }
+                ) { installment ->
                     InstallmentItem(
                         installment = installment,
                         viewModel = viewModel,
@@ -91,7 +93,7 @@ fun DashboardScreen(
                     )
                 }
             } else {
-                item(key = "empty_state") {
+                item(key = "empty_state", contentType = "empty") {
                     EmptyState()
                 }
             }
@@ -301,7 +303,7 @@ fun InstallmentItem(
                             disabledContentColor = Color.White
                         )
                     ) {
-                        AnimatedContent(targetState = isSavedToday, label = "") { saved ->
+                        AnimatedContent(targetState = isSavedToday, label = "saved_status") { saved ->
                             if (saved) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))

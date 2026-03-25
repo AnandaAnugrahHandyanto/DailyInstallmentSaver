@@ -45,7 +45,11 @@ fun HistoryScreen(viewModel: InstallmentViewModel) {
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(vertical = 16.dp)
             ) {
-                items(logs.reversed(), key = { it.id }) { log ->
+                items(
+                    items = logs, // Already reversed in ViewModel
+                    key = { it.id },
+                    contentType = { "history_item" }
+                ) { log ->
                     HistoryListItem(log)
                 }
             }

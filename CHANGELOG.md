@@ -1,17 +1,21 @@
 # Changelog
 
-## [1.1.0] - 26-03-2026
+## [1.2.0] - 2026-03-26
 
 ### Added
-
-- **Bottom Navigation**: Seamlessly switch between Dashboard, History, and Statistics.
-- **Dedicated History Screen**: Moved history logs to a separate page for better focus.
-- **Statistics & Calendar**: New screen featuring a monthly saving calendar and trend chart.
-- **Mock Sync System**: Architecture ready for future cloud synchronization.
-- **Multi-language Support**: Enhanced Indonesian and English translations.
+- **Swipeable Calendar**: Modern horizontal swipe gesture to navigate months in the Stats screen.
+- **Smooth Month Transitions**: Added fade and slide animations when switching months.
+- **Immutable UI States**: Introduced `DashboardUiState` and `StatsUiState` for predictable and efficient rendering.
 
 ### Improved
-
-- **Scrolling Performance**: Optimized `LazyColumn` with stable keys and `remember`ed calculations to ensure 60-120Hz smoothness.
-- **UI Structure**: Adopted `Scaffold` with consistent top and bottom bars across all screens.
-- **Code Quality**: Moved heavy logic out of composables to prevent unnecessary recompositions.
+- **Scrolling Performance (Critical)**:
+    - Implemented `key` and `contentType` in all `LazyColumn`s to minimize recompositions.
+    - Moved all heavy calculations (trend analysis, grouping, formatting) to `ViewModel`.
+    - Optimized state updates using `combine` and `StateFlow` for atomic UI updates.
+- **Memory & CPU Efficiency**:
+    - Replaced inline calculations with `remember` blocks in Composables.
+    - Reduced layout passes by simplifying component hierarchies.
+    - Optimized calendar day rendering with better caching of computed dates.
+- **UX Refinement**:
+    - Synced swipe gestures with previous/next buttons in the calendar.
+    - Improved line chart rendering with smoother paths and better scaling.

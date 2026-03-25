@@ -1,9 +1,12 @@
 package com.savares.dailyinstallmentsaver.ui
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
@@ -23,14 +26,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.savares.dailyinstallmentsaver.R
+import com.savares.dailyinstallmentsaver.model.SavingLogEntity
 import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(viewModel: InstallmentViewModel) {
-    val logsByDate by viewModel.logsByDate.collectAsState()
+    val uiState by viewModel.statsUiState.collectAsState()
 
     Scaffold(
         topBar = {
@@ -48,28 +53,28 @@ fun StatsScreen(viewModel: InstallmentViewModel) {
             verticalArrangement = Arrangement.spacedBy(24.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
-            item {
+            item(key = "account_section", contentType = "account") {
                 AccountMockSection()
             }
             
-            item {
+            item(key = "calendar_section", contentType = "calendar") {
                 Text(
                     text = stringResource(R.string.monthly_calendar),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(Modifier.height(8.dp))
-                CalendarView(logsByDate)
+                CalendarPagerView(uiState.logsByDate, viewModel)
             }
 
-            item {
+            item(key = "trend_section", contentType = "chart") {
                 Text(
                     text = stringResource(R.string.savings_trend),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(Modifier.height(16.dp))
-                SimpleLineChart(logsByDate)
+                SimpleLineChart(uiState.trendPoints)
             }
         }
     }
@@ -103,36 +108,45 @@ fun AccountMockSection() {
 }
 
 @Composable
-fun CalendarView(logsByDate: Map<String, Any>) {
-    var calendar by remember { mutableStateOf(Calendar.getInstance()) }
-    
-    val monthName = remember(calendar) {
-        SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(calendar.time)
-    }
-    
-    val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
-    val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
-    val isCurrentMonth = Calendar.getInstance().get(Calendar.MONTH) == calendar.get(Calendar.MONTH) &&
-                         Calendar.getInstance().get(Calendar.YEAR) == calendar.get(Calendar.YEAR)
+fun CalendarPagerView(logsByDate: Map<String, List<SavingLogEntity>>, viewModel: InstallmentViewModel) {
+    val pagerState = rememberPagerState(initialPage = 500, pageCount = { 1000 })
+    val coroutineScope = rememberCoroutineScope()
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
+            val currentMonth = remember(pagerState.currentPage) {
+                Calendar.getInstance().apply { add(Calendar.MONTH, pagerState.currentPage - 500) }
+            }
+            val monthName = remember(currentMonth) {
+                SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(currentMonth.time)
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = {
-                    calendar = (calendar.clone() as Calendar).apply { add(Calendar.MONTH, -1) }
+                    coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage - 1) }
                 }) {
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.prev_month))
                 }
-                Text(monthName, fontWeight = FontWeight.Bold)
+                
+                AnimatedContent(
+                    targetState = monthName,
+                    transitionSpec = {
+                        (fadeIn() + slideInHorizontally { it / 2 }).togetherWith(fadeOut() + slideOutHorizontally { -it / 2 })
+                    },
+                    label = "month_anim"
+                ) { targetName ->
+                    Text(targetName, fontWeight = FontWeight.Bold)
+                }
+
                 IconButton(onClick = {
-                    calendar = (calendar.clone() as Calendar).apply { add(Calendar.MONTH, 1) }
+                    coroutineScope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
                 }) {
                     Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.next_month))
                 }
@@ -140,74 +154,108 @@ fun CalendarView(logsByDate: Map<String, Any>) {
             
             Spacer(Modifier.height(8.dp))
 
-            val firstDayOfWeek = (calendar.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, 1) }.get(Calendar.DAY_OF_WEEK)
-            val offset = firstDayOfWeek - 1
-            
-            for (w in 0 until 6) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    for (d in 0 until 7) {
-                        val dayNum = w * 7 + d - offset + 1
-                        if (dayNum in 1..daysInMonth) {
-                            val dateKey = "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH)}-$dayNum"
-                            val isSaved = logsByDate.containsKey(dateKey)
-                            val isToday = isCurrentMonth && dayNum == currentDay
-                            
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .background(
-                                        if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) 
-                                        else Color.Transparent, 
-                                        CircleShape
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(
-                                        text = dayNum.toString(),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
-                                    )
-                                    if (isSaved) {
-                                        Icon(Icons.Default.Check, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(12.dp))
-                                    } else if (isCurrentMonth && dayNum < currentDay) {
-                                        Icon(Icons.Default.Close, null, tint = Color.Red.copy(alpha = 0.5f), modifier = Modifier.size(10.dp))
-                                    }
-                                }
-                            }
-                        } else {
-                            Spacer(Modifier.size(40.dp))
-                        }
-                    }
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.Top
+            ) { page ->
+                val monthCal = remember(page) {
+                    Calendar.getInstance().apply { add(Calendar.MONTH, page - 500) }
                 }
-                if (w * 7 - offset + 1 > daysInMonth) break
+                MonthGrid(monthCal, logsByDate, viewModel)
             }
         }
     }
 }
 
 @Composable
-fun SimpleLineChart(logsByDate: Map<String, Any>) {
+fun MonthGrid(calendar: Calendar, logsByDate: Map<String, List<SavingLogEntity>>, viewModel: InstallmentViewModel) {
+    val daysInMonth = remember(calendar) { calendar.getActualMaximum(Calendar.DAY_OF_MONTH) }
+    val firstDayOfWeek = remember(calendar) {
+        (calendar.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, 1) }.get(Calendar.DAY_OF_WEEK)
+    }
+    val offset = firstDayOfWeek - 1
+    
+    val today = remember { Calendar.getInstance() }
+    val isCurrentMonth = remember(calendar, today) {
+        calendar.get(Calendar.MONTH) == today.get(Calendar.MONTH) &&
+        calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR)
+    }
+    val currentDay = today.get(Calendar.DAY_OF_MONTH)
+
+    Column {
+        for (w in 0 until 6) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                for (d in 0 until 7) {
+                    val dayNum = w * 7 + d - offset + 1
+                    if (dayNum in 1..daysInMonth) {
+                        val isToday = isCurrentMonth && dayNum == currentDay
+                        val dayCal = remember(calendar, dayNum) {
+                            (calendar.clone() as Calendar).apply { set(Calendar.DAY_OF_MONTH, dayNum) }
+                        }
+                        val dateKey = remember(dayCal) { viewModel.getDateKey(dayCal) }
+                        val isSaved = logsByDate.containsKey(dateKey)
+                        
+                        DayItem(dayNum, isToday, isSaved, isCurrentMonth && dayNum < currentDay)
+                    } else {
+                        Spacer(Modifier.size(40.dp))
+                    }
+                }
+            }
+            if (w * 7 - offset + 1 > daysInMonth) break
+        }
+    }
+}
+
+@Composable
+fun DayItem(dayNum: Int, isToday: Boolean, isSaved: Boolean, isPast: Boolean) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .background(
+                if (isToday) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) 
+                else Color.Transparent, 
+                CircleShape
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = dayNum.toString(),
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal
+            )
+            if (isSaved) {
+                Icon(Icons.Default.Check, null, tint = Color(0xFF2E7D32), modifier = Modifier.size(12.dp))
+            } else if (isPast) {
+                Icon(Icons.Default.Close, null, tint = Color.Red.copy(alpha = 0.5f), modifier = Modifier.size(10.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun SimpleLineChart(points: List<Float>) {
     Canvas(modifier = Modifier.fillMaxWidth().height(150.dp)) {
+        if (points.isEmpty()) return@Canvas
+        
         val width = size.width
         val height = size.height
-        val points = listOf(0.2f, 0.5f, 0.4f, 0.8f, 0.6f, 0.9f, 0.7f) // Mock data points
+        val stepX = width / (points.size - 1).coerceAtLeast(1)
         
-        val stepX = width / (points.size - 1)
-        
-        drawLine(Color.Gray, Offset(0f, height), Offset(width, height), strokeWidth = 2f)
+        drawLine(Color.Gray.copy(alpha = 0.3f), Offset(0f, height), Offset(width, height), strokeWidth = 2f)
         
         for (i in 0 until points.size - 1) {
             val startX = i * stepX
-            val startY = height - (points[i] * height)
+            val startY = height - (points[i] * height * 0.8f) - 10f
             val endX = (i + 1) * stepX
-            val endY = height - (points[i+1] * height)
+            val endY = height - (points[i+1] * height * 0.8f) - 10f
             
             drawLine(
                 color = Color(0xFF2196F3),
                 start = Offset(startX, startY),
                 end = Offset(endX, endY),
-                strokeWidth = 4f,
+                strokeWidth = 6f,
                 cap = StrokeCap.Round
             )
         }

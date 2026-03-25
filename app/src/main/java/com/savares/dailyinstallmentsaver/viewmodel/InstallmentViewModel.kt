@@ -6,13 +6,21 @@ import androidx.lifecycle.viewModelScope
 import com.savares.dailyinstallmentsaver.data.AppDatabase
 import com.savares.dailyinstallmentsaver.model.InstallmentEntity
 import com.savares.dailyinstallmentsaver.model.SavingLogEntity
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
+
+data class DashboardUiState(
+    val installments: List<InstallmentEntity> = emptyList(),
+    val totalDailySaving: Double = 0.0,
+    val walletBreakdown: Map<String, Double> = emptyMap()
+)
+
+data class StatsUiState(
+    val logsByDate: Map<String, List<SavingLogEntity>> = emptyMap(),
+    val trendPoints: List<Float> = emptyList()
+)
 
 class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -26,6 +34,7 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
         )
 
     val savingLogs: StateFlow<List<SavingLogEntity>> = dao.getAllLogs()
+        .map { it.reversed() }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -34,55 +43,62 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
 
     val totalDailySaving: StateFlow<Double> = installments.map { list ->
         list.sumOf { calculateDailySaving(it) }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = 0.0
-    )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
     val walletBreakdown: StateFlow<Map<String, Double>> = installments.map { list ->
         list.groupBy { it.wallet }
             .mapValues { entry -> entry.value.sumOf { calculateDailySaving(it) } }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyMap()
-    )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    // Grouped logs for calendar and stats
+    val dashboardUiState: StateFlow<DashboardUiState> = combine(
+        installments, totalDailySaving, walletBreakdown
+    ) { inst, total, wallet ->
+        DashboardUiState(inst, total, wallet)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState())
+
     val logsByDate: StateFlow<Map<String, List<SavingLogEntity>>> = savingLogs.map { logs ->
         logs.groupBy { log ->
             val cal = Calendar.getInstance().apply { timeInMillis = log.date }
-            "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.MONTH)}-${cal.get(Calendar.DAY_OF_MONTH)}"
+            getDateKey(cal)
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = emptyMap()
-    )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
+
+    val statsUiState: StateFlow<StatsUiState> = logsByDate.map { logs ->
+        StatsUiState(
+            logsByDate = logs,
+            trendPoints = calculateTrendPoints(logs)
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), StatsUiState())
+
+    private fun calculateTrendPoints(logs: Map<String, List<SavingLogEntity>>): List<Float> {
+        val today = Calendar.getInstance()
+        val last7Days = (0 until 7).map { i ->
+            val cal = (today.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -i) }
+            val key = getDateKey(cal)
+            logs[key]?.sumOf { it.amount } ?: 0.0
+        }.reversed()
+        
+        val max = last7Days.maxOrNull() ?: 1.0
+        val finalMax = if (max == 0.0) 1.0 else max
+        return last7Days.map { (it / finalMax).toFloat() }
+    }
+
+    fun getDateKey(cal: Calendar): String {
+        return "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.MONTH)}-${cal.get(Calendar.DAY_OF_MONTH)}"
+    }
 
     fun addInstallment(name: String, amount: Double, dueDate: Long, wallet: String) {
         viewModelScope.launch {
-            val entity = InstallmentEntity(
-                name = name,
-                amount = amount,
-                dueDate = dueDate,
-                wallet = wallet
-            )
-            dao.insert(entity)
+            dao.insert(InstallmentEntity(name = name, amount = amount, dueDate = dueDate, wallet = wallet))
         }
     }
 
     fun updateInstallment(installment: InstallmentEntity) {
-        viewModelScope.launch {
-            dao.update(installment)
-        }
+        viewModelScope.launch { dao.update(installment) }
     }
 
     fun deleteInstallment(installment: InstallmentEntity) {
-        viewModelScope.launch {
-            dao.delete(installment)
-        }
+        viewModelScope.launch { dao.delete(installment) }
     }
 
     fun markAsSaved(installment: InstallmentEntity) {
@@ -93,12 +109,7 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
                 lastSavedDate = System.currentTimeMillis()
             )
             dao.update(updated)
-            
-            dao.insertLog(SavingLogEntity(
-                installmentName = installment.name,
-                date = System.currentTimeMillis(),
-                amount = daily
-            ))
+            dao.insertLog(SavingLogEntity(installmentName = installment.name, date = System.currentTimeMillis(), amount = daily))
         }
     }
 
@@ -119,9 +130,5 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
         val today = Calendar.getInstance()
         return lastSaved.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
                 lastSaved.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
-    }
-
-    fun getSmartSuggestion(installment: InstallmentEntity): Double {
-        return calculateDailySaving(installment)
     }
 }
