@@ -8,8 +8,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.automirrored.filled.ChevronLeft
-import androidx.compose.material.icons.automirrored.filled.ChevronRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -128,13 +128,13 @@ fun CalendarView(logsByDate: Map<String, Any>) {
                 IconButton(onClick = {
                     calendar = (calendar.clone() as Calendar).apply { add(Calendar.MONTH, -1) }
                 }) {
-                    Icon(Icons.AutoMirrored.Filled.ChevronLeft, contentDescription = stringResource(R.string.prev_month))
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.prev_month))
                 }
                 Text(monthName, fontWeight = FontWeight.Bold)
                 IconButton(onClick = {
                     calendar = (calendar.clone() as Calendar).apply { add(Calendar.MONTH, 1) }
                 }) {
-                    Icon(Icons.AutoMirrored.Filled.ChevronRight, contentDescription = stringResource(R.string.next_month))
+                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.next_month))
                 }
             }
             
