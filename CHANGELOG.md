@@ -1,17 +1,17 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-## [1.1.0] - 2024-05-20
+## [1.1.0] - 26-03-2026
 
 ### Added
-- **Mark as Saved** feature: Users can now track their daily progress by marking installments as saved for the day.
-- **Saving History**: A new section on the dashboard to view the last 10 saving activities.
-- **Smart Adjustment System**: Daily saving amounts now automatically redistribute if a day is missed, helping users stay on target.
-- **Progress Tracking**: Visual progress bars and percentage indicators for each installment.
-- **Daily Summary Card**: A prominent card at the top of the dashboard showing the total saving plan for the day, broken down by wallet.
+
+- **Bottom Navigation**: Seamlessly switch between Dashboard, History, and Statistics.
+- **Dedicated History Screen**: Moved history logs to a separate page for better focus.
+- **Statistics & Calendar**: New screen featuring a monthly saving calendar and trend chart.
+- **Mock Sync System**: Architecture ready for future cloud synchronization.
+- **Multi-language Support**: Enhanced Indonesian and English translations.
 
 ### Improved
-- **Dashboard UI**: Cleaner layout with improved spacing, grouping, and Material 3 cards.
-- **Language Support**: Updated strings for both English and Indonesian.
-- **Database Schema**: Incremented to version 3 to support saving logs and metadata.
+
+- **Scrolling Performance**: Optimized `LazyColumn` with stable keys and `remember`ed calculations to ensure 60-120Hz smoothness.
+- **UI Structure**: Adopted `Scaffold` with consistent top and bottom bars across all screens.
+- **Code Quality**: Moved heavy logic out of composables to prevent unnecessary recompositions.

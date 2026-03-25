@@ -49,6 +49,18 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
         initialValue = emptyMap()
     )
 
+    // Grouped logs for calendar and stats
+    val logsByDate: StateFlow<Map<String, List<SavingLogEntity>>> = savingLogs.map { logs ->
+        logs.groupBy { log ->
+            val cal = Calendar.getInstance().apply { timeInMillis = log.date }
+            "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.MONTH)}-${cal.get(Calendar.DAY_OF_MONTH)}"
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyMap()
+    )
+
     fun addInstallment(name: String, amount: Double, dueDate: Long, wallet: String) {
         viewModelScope.launch {
             val entity = InstallmentEntity(
@@ -76,7 +88,6 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
             )
             dao.update(updated)
             
-            // Add to logs
             dao.insertLog(SavingLogEntity(
                 installmentName = installment.name,
                 date = System.currentTimeMillis(),
@@ -104,11 +115,7 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
                 lastSaved.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
     }
 
-    // Smart Suggestion Logic: Basic amount if it was never missed
     fun getSmartSuggestion(installment: InstallmentEntity): Double {
-        val creationDate = installment.id.toLong() // Not ideal, but assuming ID relates to creation or use current
-        // For a more realistic "smart" suggestion, we compare daily needed vs original daily needed
-        // But to keep it simple as requested:
         return calculateDailySaving(installment)
     }
 }

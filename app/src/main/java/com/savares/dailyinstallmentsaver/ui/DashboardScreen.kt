@@ -10,7 +10,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,14 +18,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.savares.dailyinstallmentsaver.R
 import com.savares.dailyinstallmentsaver.model.InstallmentEntity
-import com.savares.dailyinstallmentsaver.model.SavingLogEntity
 import com.savares.dailyinstallmentsaver.util.CurrencyUtil
 import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
-import java.text.SimpleDateFormat
-import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +32,6 @@ fun DashboardScreen(
     onLanguageChange: (String) -> Unit
 ) {
     val installments by viewModel.installments.collectAsState()
-    val logs by viewModel.savingLogs.collectAsState()
     val totalSaving by viewModel.totalDailySaving.collectAsState()
     val walletBreakdown by viewModel.walletBreakdown.collectAsState()
 
@@ -51,23 +45,7 @@ fun DashboardScreen(
                     ) 
                 },
                 actions = {
-                    TextButton(onClick = {
-                        val newLang = if (currentLanguage == "en") "in" else "en"
-                        onLanguageChange(newLang)
-                    }) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = Modifier.padding(end = 8.dp)
-                        ) {
-                            Text(
-                                text = if (currentLanguage == "en") " EN " else " ID ",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
+                    LanguageToggleButton(currentLanguage, onLanguageChange)
                 }
             )
         },
@@ -90,12 +68,12 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(top = 8.dp, bottom = 100.dp)
         ) {
-            item {
+            item(key = "total_card") {
                 TotalSavingCard(totalSaving, walletBreakdown)
             }
 
             if (installments.isNotEmpty()) {
-                item {
+                item(key = "title_installments") {
                     Text(
                         text = "My Installments",
                         style = MaterialTheme.typography.titleMedium,
@@ -110,30 +88,31 @@ fun DashboardScreen(
                     )
                 }
             } else {
-                item {
+                item(key = "empty_state") {
                     EmptyState()
                 }
             }
+        }
+    }
+}
 
-            if (logs.isNotEmpty()) {
-                item {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(top = 16.dp)
-                    ) {
-                        Icon(Icons.Default.History, contentDescription = null, modifier = Modifier.size(20.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(R.string.history_title),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                items(logs.take(10)) { log ->
-                    HistoryItem(log)
-                }
-            }
+@Composable
+fun LanguageToggleButton(currentLanguage: String, onLanguageChange: (String) -> Unit) {
+    TextButton(onClick = {
+        val newLang = if (currentLanguage == "en") "in" else "en"
+        onLanguageChange(newLang)
+    }) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            modifier = Modifier.padding(end = 8.dp)
+        ) {
+            Text(
+                text = if (currentLanguage == "en") " EN " else " ID ",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+            )
         }
     }
 }
@@ -191,11 +170,19 @@ fun InstallmentItem(
     installment: InstallmentEntity,
     viewModel: InstallmentViewModel
 ) {
-    val daily = viewModel.calculateDailySaving(installment)
-    val daysLeft = viewModel.calculateDaysLeft(installment.dueDate)
-    val isSavedToday = viewModel.isSavedToday(installment)
-    val progress = (installment.savedAmount / installment.amount).coerceIn(0.0, 1.0).toFloat()
-    val suggestion = viewModel.getSmartSuggestion(installment)
+    // Optimization: Calculate values outside recomposition-heavy blocks or use remember
+    val daily = remember(installment.amount, installment.savedAmount, installment.dueDate) {
+        viewModel.calculateDailySaving(installment)
+    }
+    val daysLeft = remember(installment.dueDate) {
+        viewModel.calculateDaysLeft(installment.dueDate)
+    }
+    val isSavedToday = remember(installment.lastSavedDate) {
+        viewModel.isSavedToday(installment)
+    }
+    val progress = remember(installment.savedAmount, installment.amount) {
+        (installment.savedAmount / installment.amount).coerceIn(0.0, 1.0).toFloat()
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -231,7 +218,6 @@ fun InstallmentItem(
 
             Spacer(modifier = Modifier.height(12.dp))
             
-            // Progress Section
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier
@@ -267,7 +253,6 @@ fun InstallmentItem(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Action Section
             Surface(
                 color = MaterialTheme.colorScheme.surface,
                 shape = MaterialTheme.shapes.medium,
@@ -282,7 +267,7 @@ fun InstallmentItem(
                 ) {
                     Column {
                         Text(
-                            text = "Daily Needed",
+                            text = stringResource(R.string.daily_needed),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.secondary
                         )
@@ -315,10 +300,11 @@ fun InstallmentItem(
                 }
             }
 
-            // Smart Adjustment Message
             if (!isSavedToday && daysLeft > 0) {
-                val originalDaily = installment.amount / (viewModel.calculateDaysLeft(installment.createdAt + (daysLeft * 86400000L)).coerceAtLeast(1)) // Pseudo logic
-                if (daily > (installment.amount / 30)) { // Simple check if missed days increased amount
+                 val isSignificantlyHigher = remember(daily, installment.amount) {
+                     daily > (installment.amount / 30)
+                 }
+                 if (isSignificantlyHigher) {
                      Spacer(modifier = Modifier.height(8.dp))
                      Text(
                         text = stringResource(R.string.suggestion_missed, CurrencyUtil.formatCurrency(daily)),
@@ -328,34 +314,6 @@ fun InstallmentItem(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun HistoryItem(log: SavingLogEntity) {
-    val sdf = SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault())
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(log.installmentName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                Text(sdf.format(Date(log.date)), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.secondary)
-            }
-            Text(
-                "+ " + CurrencyUtil.formatCurrency(log.amount),
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF2E7D32),
-                fontWeight = FontWeight.Bold
-            )
         }
     }
 }

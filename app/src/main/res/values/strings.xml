@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">Daily Installment Saver</string>
-    <string name="dashboard_title">Daily Installment Saver</string>
+    <string name="dashboard_title">Dashboard</string>
+    <string name="history_title">History</string>
+    <string name="stats_title">Statistics</string>
     <string name="total_daily_saving">Today\'s Saving Plan</string>
     <string name="add_installment">Add Installment</string>
     <string name="installment_name">Installment Name</string>
@@ -9,7 +11,7 @@
     <string name="due_date">Due Date</string>
     <string name="save">Save</string>
     <string name="delete">Delete</string>
-    <string name="daily_needed">Daily: %1$s</string>
+    <string name="daily_needed">Daily Needed</string>
     <string name="notification_title">Daily Saving Reminder</string>
     <string name="notification_content">Today you need to save %1$s (%2$s)</string>
     <string name="language_toggle">EN/ID</string>
@@ -22,6 +24,10 @@
     <string name="smart_suggestion">Smart Suggestion</string>
     <string name="suggestion_text">Today you should save %1$s to stay on track.</string>
     <string name="suggestion_missed">You missed some days! To catch up, save %1$s today.</string>
-    <string name="history_title">Recent History</string>
     <string name="no_history">No savings logged yet.</string>
+    <string name="monthly_calendar">Monthly Calendar</string>
+    <string name="savings_trend">Savings Trend</string>
+    <string name="account">Account</string>
+    <string name="sync_status">Local Sync Only</string>
+    <string name="login_mock">Login (Mock)</string>
 </resources>
