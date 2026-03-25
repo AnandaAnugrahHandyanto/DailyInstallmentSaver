@@ -9,11 +9,17 @@
     <string name="due_date">Tanggal Jatuh Tempo</string>
     <string name="save">Simpan</string>
     <string name="delete">Hapus</string>
-    <string name="daily_needed">Harian: Rp %1$s</string>
+    <string name="daily_needed">Harian: %1$s</string>
     <string name="notification_title">Pengingat Menabung Harian</string>
-    <string name="notification_content">Hari ini kamu perlu menabung Rp %1$s (%2$s)</string>
+    <string name="notification_content">Hari ini kamu perlu menabung %1$s (%2$s)</string>
     <string name="language_toggle">EN/ID</string>
     <string name="empty_list">Belum ada cicilan. Tambah sekarang!</string>
     <string name="pick_date">Pilih Tanggal</string>
     <string name="days_left">%1$d hari lagi</string>
+    <string name="mark_as_saved">Simpan Hari Ini</string>
+    <string name="saved_today">Sudah Disimpan!</string>
+    <string name="progress">%1$s dari %2$s (%3$d%%)</string>
+    <string name="smart_suggestion">Saran Pintar</string>
+    <string name="suggestion_text">Hari ini kamu sebaiknya menabung %1$s agar tetap sesuai target.</string>
+    <string name="suggestion_missed">Kamu melewatkan beberapa hari! Untuk mengejar, tabung %1$s hari ini.</string>
 </resources>

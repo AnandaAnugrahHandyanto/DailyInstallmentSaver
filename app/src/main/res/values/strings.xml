@@ -9,11 +9,17 @@
     <string name="due_date">Due Date</string>
     <string name="save">Save</string>
     <string name="delete">Delete</string>
-    <string name="daily_needed">Daily: Rp %1$s</string>
+    <string name="daily_needed">Daily: %1$s</string>
     <string name="notification_title">Daily Saving Reminder</string>
-    <string name="notification_content">Today you need to save Rp %1$s (%2$s)</string>
+    <string name="notification_content">Today you need to save %1$s (%2$s)</string>
     <string name="language_toggle">EN/ID</string>
     <string name="empty_list">No installments yet. Add one!</string>
     <string name="pick_date">Pick Date</string>
     <string name="days_left">%1$d days left</string>
+    <string name="mark_as_saved">Mark as Saved</string>
+    <string name="saved_today">Saved Today!</string>
+    <string name="progress">%1$s of %2$s (%3$d%%)</string>
+    <string name="smart_suggestion">Smart Suggestion</string>
+    <string name="suggestion_text">Today you should save %1$s to stay on track.</string>
+    <string name="suggestion_missed">You missed some days! To catch up, save %1$s today.</string>
 </resources>

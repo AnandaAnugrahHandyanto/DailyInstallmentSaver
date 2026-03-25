@@ -10,6 +10,9 @@ interface InstallmentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(installment: InstallmentEntity)
 
+    @Update
+    suspend fun update(installment: InstallmentEntity)
+
     @Query("SELECT * FROM installments ORDER BY id DESC")
     fun getAll(): Flow<List<InstallmentEntity>>
 
