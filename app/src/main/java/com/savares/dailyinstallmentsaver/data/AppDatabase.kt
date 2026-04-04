@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.savares.dailyinstallmentsaver.model.InstallmentEntity
 import com.savares.dailyinstallmentsaver.model.SavingLogEntity
 
-@Database(entities = [InstallmentEntity::class, SavingLogEntity::class], version = 4, exportSchema = false)
+@Database(entities = [InstallmentEntity::class, SavingLogEntity::class], version = 5, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun installmentDao(): InstallmentDao

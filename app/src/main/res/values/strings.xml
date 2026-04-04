@@ -63,4 +63,9 @@
     <string name="stats_title">Statistics</string>
     <string name="monthly_calendar">Monthly Calendar</string>
     <string name="savings_trend">Savings Trend (Last 7 Days)</string>
+
+    <!-- Add Installment Form -->
+    <string name="collected_amount">Collected Amount</string>
+    <string name="wallet_type">Wallet Type</string>
+    <string name="collected_amount_error">Collected amount cannot exceed target amount</string>
 </resources>

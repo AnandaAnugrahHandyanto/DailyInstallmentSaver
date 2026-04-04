@@ -80,14 +80,14 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
                 dailySaving = calculateDailySaving(it),
                 daysLeft = calculateDaysLeft(it.dueDate),
                 isSavedToday = isSavedToday(it),
-                progress = if (it.amount > 0) (it.savedAmount / it.amount).coerceIn(0.0, 1.0).toFloat() else 0f
+                progress = if (it.amount > 0) ((it.savedAmount + it.collectedAmount) / it.amount).coerceIn(0.0, 1.0).toFloat() else 0f
             )
         }
 
         val progress = if (inst.isEmpty()) 0 else {
             val totalTarget = inst.sumOf { it.amount }
             if (totalTarget > 0) {
-                (inst.sumOf { it.savedAmount } / totalTarget * 100).toInt().coerceIn(0, 100)
+                (inst.sumOf { it.savedAmount + it.collectedAmount } / totalTarget * 100).toInt().coerceIn(0, 100)
             } else 0
         }
         
@@ -216,9 +216,9 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
         return "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.MONTH)}-${cal.get(Calendar.DAY_OF_MONTH)}"
     }
 
-    fun addInstallment(name: String, amount: Double, dueDate: Long, wallet: String) {
+    fun addInstallment(name: String, amount: Double, dueDate: Long, wallet: String, collectedAmount: Double = 0.0) {
         viewModelScope.launch(Dispatchers.IO) {
-            dao.insert(InstallmentEntity(name = name, amount = amount, dueDate = dueDate, wallet = wallet))
+            dao.insert(InstallmentEntity(name = name, amount = amount, dueDate = dueDate, wallet = wallet, collectedAmount = collectedAmount))
         }
     }
 
@@ -249,7 +249,7 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
 
     fun calculateDailySaving(installment: InstallmentEntity): Double {
         val daysLeft = calculateDaysLeft(installment.dueDate)
-        val remainingAmount = (installment.amount - installment.savedAmount).coerceAtLeast(0.0)
+        val remainingAmount = (installment.amount - installment.collectedAmount - installment.savedAmount).coerceAtLeast(0.0)
         return if (daysLeft > 0) remainingAmount / daysLeft else remainingAmount
     }
 

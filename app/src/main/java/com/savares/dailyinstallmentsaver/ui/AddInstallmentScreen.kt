@@ -34,6 +34,7 @@ fun AddInstallmentScreen(
     var name by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var wallet by remember { mutableStateOf("") }
+    var collectedAmount by remember { mutableStateOf("") }
     var dueDate by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
@@ -42,6 +43,7 @@ fun AddInstallmentScreen(
             name = it.name
             amount = it.amount.toString()
             wallet = it.wallet
+            collectedAmount = if (it.collectedAmount > 0.0) it.collectedAmount.toString() else ""
             dueDate = it.dueDate
         }
     }
@@ -101,6 +103,23 @@ fun AddInstallmentScreen(
                 shape = RoundedCornerShape(16.dp)
             )
 
+            val amountVal = amount.toDoubleOrNull() ?: 0.0
+            val collectedVal = collectedAmount.toDoubleOrNull() ?: 0.0
+            val collectedAmountError = collectedAmount.isNotBlank() && amount.isNotBlank() && collectedVal > amountVal
+
+            OutlinedTextField(
+                value = collectedAmount,
+                onValueChange = { collectedAmount = it },
+                label = { Text(stringResource(R.string.collected_amount)) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                shape = RoundedCornerShape(16.dp),
+                isError = collectedAmountError,
+                supportingText = if (collectedAmountError) {
+                    { Text(stringResource(R.string.collected_amount_error)) }
+                } else null
+            )
+
             val sdf = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
             val formattedDate = remember(dueDate, sdf) { sdf.format(Date(dueDate)) }
 
@@ -116,10 +135,9 @@ fun AddInstallmentScreen(
 
             Button(
                 onClick = {
-                    if (name.isNotBlank() && amount.isNotBlank() && wallet.isNotBlank()) {
-                        val amountVal = amount.toDoubleOrNull() ?: 0.0
+                    if (name.isNotBlank() && amount.isNotBlank() && wallet.isNotBlank() && !collectedAmountError) {
                         if (installmentId == null) {
-                            viewModel.addInstallment(name, amountVal, dueDate, wallet)
+                            viewModel.addInstallment(name, amountVal, dueDate, wallet, if (collectedAmount.isBlank()) 0.0 else collectedVal)
                         } else {
                             editingInstallment?.let {
                                 viewModel.updateInstallment(
@@ -127,7 +145,8 @@ fun AddInstallmentScreen(
                                         name = name,
                                         amount = amountVal,
                                         dueDate = dueDate,
-                                        wallet = wallet
+                                        wallet = wallet,
+                                        collectedAmount = if (collectedAmount.isBlank()) 0.0 else collectedVal
                                     )
                                 )
                             }
@@ -137,7 +156,7 @@ fun AddInstallmentScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                enabled = name.isNotBlank() && amount.isNotBlank() && wallet.isNotBlank()
+                enabled = name.isNotBlank() && amount.isNotBlank() && wallet.isNotBlank() && (collectedAmount.isBlank() || (collectedAmount.toDoubleOrNull() ?: 0.0) <= (amount.toDoubleOrNull() ?: 0.0))
             ) {
                 Text(if (installmentId == null) stringResource(R.string.save) else stringResource(R.string.update))
             }
