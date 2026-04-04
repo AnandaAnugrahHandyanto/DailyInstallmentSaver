@@ -1,13 +1,17 @@
 package com.savares.dailyinstallmentsaver.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.savares.dailyinstallmentsaver.R
@@ -47,32 +51,37 @@ fun AddInstallmentScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
-                        if (installmentId == null) stringResource(R.string.add_installment) 
-                        else stringResource(R.string.edit_installment)
-                    ) 
+                        if (installmentId == null) stringResource(R.string.add_installment)
+                        else stringResource(R.string.edit_installment),
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
-        }
+        },
+        containerColor = Color.Transparent
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
                 .padding(padding)
-                .padding(16.dp),
+                .padding(horizontal = 20.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = { Text(stringResource(R.string.installment_name)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
             )
 
             OutlinedTextField(
@@ -80,25 +89,30 @@ fun AddInstallmentScreen(
                 onValueChange = { amount = it },
                 label = { Text(stringResource(R.string.amount)) },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                shape = RoundedCornerShape(16.dp)
             )
 
             OutlinedTextField(
                 value = wallet,
                 onValueChange = { wallet = it },
                 label = { Text(stringResource(R.string.wallet)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
             )
 
             val sdf = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
             val formattedDate = remember(dueDate, sdf) { sdf.format(Date(dueDate)) }
-            
+
             OutlinedButton(
                 onClick = { showDatePicker = true },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Text(text = stringResource(R.string.due_date_display, formattedDate))
             }
+
+            Spacer(Modifier.height(4.dp))
 
             Button(
                 onClick = {
@@ -108,18 +122,21 @@ fun AddInstallmentScreen(
                             viewModel.addInstallment(name, amountVal, dueDate, wallet)
                         } else {
                             editingInstallment?.let {
-                                viewModel.updateInstallment(it.copy(
-                                    name = name,
-                                    amount = amountVal,
-                                    dueDate = dueDate,
-                                    wallet = wallet
-                                ))
+                                viewModel.updateInstallment(
+                                    it.copy(
+                                        name = name,
+                                        amount = amountVal,
+                                        dueDate = dueDate,
+                                        wallet = wallet
+                                    )
+                                )
                             }
                         }
                         onNavigateBack()
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
                 enabled = name.isNotBlank() && amount.isNotBlank() && wallet.isNotBlank()
             ) {
                 Text(if (installmentId == null) stringResource(R.string.save) else stringResource(R.string.update))

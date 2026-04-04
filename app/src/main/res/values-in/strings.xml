@@ -58,4 +58,9 @@
     <string name="overall_progress">Progres Keseluruhan: %1$d%%</string>
     <string name="my_installments">Cicilan Saya</string>
     <string name="history_amount_add">+ %1$s</string>
+
+    <!-- Stats Strings -->
+    <string name="stats_title">Statistik</string>
+    <string name="monthly_calendar">Kalender Bulanan</string>
+    <string name="savings_trend">Tren Tabungan (7 Hari Terakhir)</string>
 </resources>
