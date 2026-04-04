@@ -156,7 +156,7 @@ fun AddInstallmentScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                enabled = name.isNotBlank() && amount.isNotBlank() && wallet.isNotBlank() && (collectedAmount.isBlank() || (collectedAmount.toDoubleOrNull() ?: 0.0) <= (amount.toDoubleOrNull() ?: 0.0))
+                enabled = name.isNotBlank() && amount.isNotBlank() && wallet.isNotBlank() && !collectedAmountError
             ) {
                 Text(if (installmentId == null) stringResource(R.string.save) else stringResource(R.string.update))
             }

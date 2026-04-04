@@ -114,21 +114,19 @@ fun AddInstallmentBottomSheet(
                 }
             }
 
-            Column {
-                OutlinedTextField(
-                    value = collectedAmount,
-                    onValueChange = { collectedAmount = it },
-                    label = { Text(stringResource(R.string.collected_amount)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    shape = RoundedCornerShape(16.dp),
-                    singleLine = true,
-                    isError = collectedAmountError,
-                    supportingText = if (collectedAmountError) {
-                        { Text(stringResource(R.string.collected_amount_error)) }
-                    } else null
-                )
-            }
+            OutlinedTextField(
+                value = collectedAmount,
+                onValueChange = { collectedAmount = it },
+                label = { Text(stringResource(R.string.collected_amount)) },
+                modifier = Modifier.fillMaxWidth(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                shape = RoundedCornerShape(16.dp),
+                singleLine = true,
+                isError = collectedAmountError,
+                supportingText = if (collectedAmountError) {
+                    { Text(stringResource(R.string.collected_amount_error)) }
+                } else null
+            )
 
             OutlinedButton(
                 onClick = { showDatePicker = true },
