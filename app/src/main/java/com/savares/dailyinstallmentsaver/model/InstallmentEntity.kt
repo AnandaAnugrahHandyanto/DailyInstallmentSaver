@@ -11,6 +11,7 @@ data class InstallmentEntity(
     val name: String,
     val amount: Double,
     val savedAmount: Double = 0.0,
+    val collectedAmount: Double = 0.0,
     val dueDate: Long,
     val wallet: String,
     val lastSavedDate: Long = 0

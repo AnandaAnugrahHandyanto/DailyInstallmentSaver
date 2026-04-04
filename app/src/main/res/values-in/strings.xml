@@ -63,4 +63,9 @@
     <string name="stats_title">Statistik</string>
     <string name="monthly_calendar">Kalender Bulanan</string>
     <string name="savings_trend">Tren Tabungan (7 Hari Terakhir)</string>
+
+    <!-- Add Installment Form -->
+    <string name="collected_amount">Jumlah Terkumpul</string>
+    <string name="wallet_type">Jenis Dompet</string>
+    <string name="collected_amount_error">Jumlah terkumpul tidak boleh melebihi target</string>
 </resources>

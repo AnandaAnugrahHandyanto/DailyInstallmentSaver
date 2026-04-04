@@ -47,6 +47,7 @@ fun DashboardScreen(
     val listState = rememberLazyListState()
 
     var installmentToDelete by remember { mutableStateOf<InstallmentEntity?>(null) }
+    var showAddSheet by remember { mutableStateOf(false) }
 
     val isFabVisible by remember {
         derivedStateOf {
@@ -80,7 +81,7 @@ fun DashboardScreen(
                 FloatingActionButton(
                     onClick = {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        onNavigateToAdd()
+                        showAddSheet = true
                     },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -181,6 +182,13 @@ fun DashboardScreen(
                     Text(stringResource(R.string.cancel))
                 }
             }
+        )
+    }
+
+    if (showAddSheet) {
+        AddInstallmentBottomSheet(
+            viewModel = viewModel,
+            onDismiss = { showAddSheet = false }
         )
     }
 }
@@ -357,8 +365,8 @@ fun InstallmentItem(
     val haptic = LocalHapticFeedback.current
     val formattedDaily = remember(dailySaving) { CurrencyUtil.formatCurrency(dailySaving) }
 
-    val progress by remember(installment.savedAmount, installment.amount) {
-        derivedStateOf { (installment.savedAmount / installment.amount).coerceIn(0.0, 1.0).toFloat() }
+    val progress by remember(installment.savedAmount, installment.collectedAmount, installment.amount) {
+        derivedStateOf { ((installment.savedAmount + installment.collectedAmount) / installment.amount).coerceIn(0.0, 1.0).toFloat() }
     }
 
     GlassCard(
@@ -418,7 +426,7 @@ fun InstallmentItem(
                 trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
             )
 
-            val formattedSaved = remember(installment.savedAmount) { CurrencyUtil.formatCurrency(installment.savedAmount) }
+            val formattedSaved = remember(installment.savedAmount, installment.collectedAmount) { CurrencyUtil.formatCurrency(installment.savedAmount + installment.collectedAmount) }
             val formattedTarget = remember(installment.amount) { CurrencyUtil.formatCurrency(installment.amount) }
             val progressPercent = remember(progress) { (progress * 100).toInt() }
 
