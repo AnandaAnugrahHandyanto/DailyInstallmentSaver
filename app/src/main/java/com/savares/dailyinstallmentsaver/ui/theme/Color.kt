@@ -17,7 +17,6 @@ object GlassAlpha {
     const val SURFACE = 0.10f
     const val BORDER = 0.10f
     const val NAV_BAR = 0.92f
-    const val OVERLAY = 0.40f
 }
 
 // Semantic status colors
