@@ -32,6 +32,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.savares.dailyinstallmentsaver.R
 import com.savares.dailyinstallmentsaver.model.SavingLogEntity
+import com.savares.dailyinstallmentsaver.ui.theme.ColorSaved
+import com.savares.dailyinstallmentsaver.ui.theme.GlassAlpha
+import com.savares.dailyinstallmentsaver.ui.theme.GlassCard
 import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -45,9 +48,11 @@ fun StatsScreen(viewModel: InstallmentViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.stats_title), fontWeight = FontWeight.Bold) }
+                title = { Text(stringResource(R.string.stats_title), fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
-        }
+        },
+        containerColor = Color.Transparent
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -73,8 +78,12 @@ fun StatsScreen(viewModel: InstallmentViewModel) {
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(Modifier.height(16.dp))
-                SimpleLineChart(uiState.trendPoints)
+                Spacer(Modifier.height(8.dp))
+                GlassCard(modifier = Modifier.fillMaxWidth(), cornerRadius = 24.dp) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        SimpleLineChart(uiState.trendPoints)
+                    }
+                }
             }
         }
     }
@@ -94,15 +103,15 @@ fun CalendarPagerView(logsByDate: Map<String, List<SavingLogEntity>>, viewModel:
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f))
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = GlassAlpha.CARD))
                 .then(if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) Modifier.blur(15.dp) else Modifier)
         )
-        
+
         Surface(
             modifier = Modifier.fillMaxWidth(),
             color = Color.Transparent,
             shape = RoundedCornerShape(28.dp),
-            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
         ) {
             Column(modifier = Modifier.padding(12.dp)) {
                 val currentMonth = remember(pagerState.currentPage) {
@@ -123,7 +132,7 @@ fun CalendarPagerView(logsByDate: Map<String, List<SavingLogEntity>>, viewModel:
                     }) {
                         Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = null)
                     }
-                    
+
                     Text(monthName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
 
                     IconButton(onClick = {
@@ -133,7 +142,7 @@ fun CalendarPagerView(logsByDate: Map<String, List<SavingLogEntity>>, viewModel:
                         Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
                     }
                 }
-                
+
                 Spacer(Modifier.height(8.dp))
 
                 HorizontalPager(
@@ -156,12 +165,12 @@ fun CalendarPagerView(logsByDate: Map<String, List<SavingLogEntity>>, viewModel:
 fun MonthGrid(calendar: Calendar, logsByDate: Map<String, List<SavingLogEntity>>, viewModel: InstallmentViewModel) {
     val daysInMonth = remember(calendar) { calendar.getActualMaximum(Calendar.DAY_OF_MONTH) }
     val firstDayOfWeek = remember(calendar) {
-        (calendar.clone() as Calendar).apply { 
-            set(Calendar.DAY_OF_MONTH, 1) 
+        (calendar.clone() as Calendar).apply {
+            set(Calendar.DAY_OF_MONTH, 1)
         }.get(Calendar.DAY_OF_WEEK)
     }
     val offset = firstDayOfWeek - 1
-    
+
     val today = remember { Calendar.getInstance() }
     val isCurrentMonth = remember(calendar, today) {
         calendar.get(Calendar.MONTH) == today.get(Calendar.MONTH) &&
@@ -173,7 +182,7 @@ fun MonthGrid(calendar: Calendar, logsByDate: Map<String, List<SavingLogEntity>>
         for (w in 0 until 6) {
             val startDay = w * 7 - offset + 1
             if (startDay > daysInMonth) break
-            
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
                 for (d in 0 until 7) {
                     val dayNum = w * 7 + d - offset + 1
@@ -185,9 +194,9 @@ fun MonthGrid(calendar: Calendar, logsByDate: Map<String, List<SavingLogEntity>>
                         val dateKey = remember(dayCal) { viewModel.getDateKey(dayCal) }
                         val isSaved = logsByDate.containsKey(dateKey)
                         val isPast = (calendar.get(Calendar.YEAR) < today.get(Calendar.YEAR)) ||
-                                     (calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) && calendar.get(Calendar.MONTH) < today.get(Calendar.MONTH)) ||
-                                     (isCurrentMonth && dayNum < currentDayNum)
-                        
+                            (calendar.get(Calendar.YEAR) == today.get(Calendar.YEAR) && calendar.get(Calendar.MONTH) < today.get(Calendar.MONTH)) ||
+                            (isCurrentMonth && dayNum < currentDayNum)
+
                         DayItem(dayNum, isToday, isSaved, isPast)
                     } else {
                         Spacer(Modifier.size(40.dp))
@@ -219,16 +228,16 @@ fun DayItem(dayNum: Int, isToday: Boolean, isSaved: Boolean, isPast: Boolean) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (isSaved) {
                     Icon(
-                        Icons.Default.Check, 
-                        null, 
-                        tint = if (isToday) Color(0xFF4CAF50) else Color(0xFF4CAF50).copy(alpha = 0.8f), 
+                        Icons.Default.Check,
+                        null,
+                        tint = if (isToday) ColorSaved else ColorSaved.copy(alpha = 0.8f),
                         modifier = Modifier.size(12.dp)
                     )
                 } else if (isPast) {
                     Icon(
-                        Icons.Default.Close, 
-                        null, 
-                        tint = Color.Red.copy(alpha = 0.6f), 
+                        Icons.Default.Close,
+                        null,
+                        tint = Color.Red.copy(alpha = 0.6f),
                         modifier = Modifier.size(10.dp)
                     )
                 }
@@ -242,19 +251,19 @@ fun SimpleLineChart(points: List<Float>) {
     val primaryColor = MaterialTheme.colorScheme.primary
     Canvas(modifier = Modifier.fillMaxWidth().height(150.dp)) {
         if (points.isEmpty()) return@Canvas
-        
+
         val width = size.width
         val height = size.height
         val stepX = width / (points.size - 1).coerceAtLeast(1)
-        
+
         drawLine(Color.Gray.copy(alpha = 0.2f), Offset(0f, height), Offset(width, height), strokeWidth = 1f)
-        
+
         for (i in 0 until points.size - 1) {
             val startX = i * stepX
             val startY = height - (points[i] * height * 0.7f) - 20f
             val endX = (i + 1) * stepX
-            val endY = height - (points[i+1] * height * 0.7f) - 20f
-            
+            val endY = height - (points[i + 1] * height * 0.7f) - 20f
+
             drawLine(
                 color = primaryColor,
                 start = Offset(startX, startY),

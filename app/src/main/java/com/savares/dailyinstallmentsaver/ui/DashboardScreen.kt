@@ -13,7 +13,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,9 +25,11 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.savares.dailyinstallmentsaver.R
 import com.savares.dailyinstallmentsaver.model.InstallmentEntity
+import com.savares.dailyinstallmentsaver.ui.theme.ColorSaved
+import com.savares.dailyinstallmentsaver.ui.theme.GlassCard
+import com.savares.dailyinstallmentsaver.ui.theme.GlassSurface
 import com.savares.dailyinstallmentsaver.util.CurrencyUtil
 import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
 
@@ -43,10 +45,9 @@ fun DashboardScreen(
     val uiState by viewModel.dashboardUiState.collectAsState()
     val haptic = LocalHapticFeedback.current
     val listState = rememberLazyListState()
-    
+
     var installmentToDelete by remember { mutableStateOf<InstallmentEntity?>(null) }
 
-    // FAB Visibility Logic - Optimized for max performance
     val isFabVisible by remember {
         derivedStateOf {
             listState.firstVisibleItemIndex == 0 || listState.firstVisibleItemScrollOffset < 150
@@ -56,15 +57,18 @@ fun DashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { 
+                title = {
                     Text(
                         stringResource(R.string.dashboard_title),
                         fontWeight = FontWeight.Bold
-                    ) 
+                    )
                 },
                 actions = {
                     LanguageToggleButton(currentLanguage, onLanguageChange)
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent
+                )
             )
         },
         floatingActionButton = {
@@ -80,12 +84,13 @@ fun DashboardScreen(
                     },
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.padding(bottom = 90.dp) // Clear of navbar
+                    modifier = Modifier.padding(bottom = 90.dp)
                 ) {
                     Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_installment))
                 }
             }
-        }
+        },
+        containerColor = Color.Transparent
     ) { padding ->
         LazyColumn(
             state = listState,
@@ -95,7 +100,7 @@ fun DashboardScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(
-                top = padding.calculateTopPadding() + 8.dp, 
+                top = padding.calculateTopPadding() + 8.dp,
                 bottom = 130.dp
             )
         ) {
@@ -103,7 +108,6 @@ fun DashboardScreen(
                 TotalSavingCard(uiState.totalDailySaving, uiState.walletBreakdown)
             }
 
-            // Insights Section
             item(key = "insights_section") {
                 InsightsSection(
                     currentStreak = uiState.currentStreak,
@@ -131,15 +135,14 @@ fun DashboardScreen(
                     InstallmentItem(
                         installment = itemState.installment,
                         onMarkAsSaved = { viewModel.markAsSaved(itemState.installment) },
-                        onEdit = { 
+                        onEdit = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                            onNavigateToEdit(itemState.installment.id) 
+                            onNavigateToEdit(itemState.installment.id)
                         },
                         onDelete = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             installmentToDelete = itemState.installment
                         },
-                        // Optimization: Use pre-calculated values from UI state
                         dailySaving = itemState.dailySaving,
                         daysLeft = itemState.daysLeft,
                         isSavedToday = itemState.isSavedToday
@@ -171,9 +174,9 @@ fun DashboardScreen(
                 }
             },
             dismissButton = {
-                TextButton(onClick = { 
+                TextButton(onClick = {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    installmentToDelete = null 
+                    installmentToDelete = null
                 }) {
                     Text(stringResource(R.string.cancel))
                 }
@@ -190,15 +193,27 @@ fun InsightsSection(
     daysMissedThisWeek: Int,
     overallProgress: Int
 ) {
-    Card(
+    GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        cornerRadius = 24.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            Icons.Default.TrendingUp,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+                Spacer(Modifier.width(10.dp))
                 Text(
                     text = stringResource(R.string.current_streak, currentStreak),
                     style = MaterialTheme.typography.labelLarge,
@@ -211,19 +226,37 @@ fun InsightsSection(
                     color = MaterialTheme.colorScheme.secondary
                 )
             }
-            
+
             Spacer(Modifier.height(12.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
             Spacer(Modifier.height(12.dp))
-            
+
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text(stringResource(R.string.weekly_summary), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.secondary)
-                    Text(stringResource(R.string.days_saved, daysSavedThisWeek), style = MaterialTheme.typography.bodySmall)
-                    Text(stringResource(R.string.days_missed, daysMissedThisWeek), style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        stringResource(R.string.weekly_summary),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        stringResource(R.string.days_saved, daysSavedThisWeek),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = ColorSaved
+                    )
+                    Text(
+                        stringResource(R.string.days_missed, daysMissedThisWeek),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+                    )
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(stringResource(R.string.overall_progress, overallProgress), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        stringResource(R.string.overall_progress, overallProgress),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
         }
@@ -258,27 +291,33 @@ fun TotalSavingCard(total: Double, breakdown: Map<String, Double>) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+        shape = RoundedCornerShape(28.dp),
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            Color.White.copy(alpha = 0.15f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             val formattedTotal = remember(total) { CurrencyUtil.formatCurrency(total) }
             Text(
                 text = stringResource(R.string.total_daily_saving),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f)
             )
+            Spacer(Modifier.height(4.dp))
             Text(
                 text = formattedTotal,
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onPrimary
             )
-            
+
             if (breakdown.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f))
                 Spacer(modifier = Modifier.height(12.dp))
-                
+
                 breakdown.forEach { (wallet, amount) ->
                     key(wallet) {
                         val formattedAmount = remember(amount) { CurrencyUtil.formatCurrency(amount) }
@@ -289,7 +328,7 @@ fun TotalSavingCard(total: Double, breakdown: Map<String, Double>) {
                             Text(
                                 text = wallet,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
                             )
                             Text(
                                 text = formattedAmount,
@@ -317,22 +356,14 @@ fun InstallmentItem(
 ) {
     val haptic = LocalHapticFeedback.current
     val formattedDaily = remember(dailySaving) { CurrencyUtil.formatCurrency(dailySaving) }
-    
+
     val progress by remember(installment.savedAmount, installment.amount) {
         derivedStateOf { (installment.savedAmount / installment.amount).coerceIn(0.0, 1.0).toFloat() }
     }
 
-    Card(
+    GlassCard(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        shape = RoundedCornerShape(24.dp),
-        border = androidx.compose.foundation.BorderStroke(
-            1.dp, 
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
-        )
+        cornerRadius = 24.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(
@@ -375,18 +406,18 @@ fun InstallmentItem(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(12.dp)
+                    .height(8.dp)
                     .clip(CircleShape),
                 strokeCap = androidx.compose.ui.graphics.StrokeCap.Round,
                 color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
             )
-            
+
             val formattedSaved = remember(installment.savedAmount) { CurrencyUtil.formatCurrency(installment.savedAmount) }
             val formattedTarget = remember(installment.amount) { CurrencyUtil.formatCurrency(installment.amount) }
             val progressPercent = remember(progress) { (progress * 100).toInt() }
@@ -394,16 +425,11 @@ fun InstallmentItem(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 8.dp),
+                    .padding(top = 6.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = stringResource(
-                        R.string.progress,
-                        formattedSaved,
-                        formattedTarget,
-                        progressPercent
-                    ),
+                    text = stringResource(R.string.progress, formattedSaved, formattedTarget, progressPercent),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -415,13 +441,11 @@ fun InstallmentItem(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            Surface(
+            GlassSurface(
                 modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+                cornerRadius = 16.dp
             ) {
                 Row(
                     modifier = Modifier
@@ -443,17 +467,17 @@ fun InstallmentItem(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
-                    
+
                     Button(
-                        onClick = { 
+                        onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             onMarkAsSaved()
                         },
                         enabled = !isSavedToday,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSavedToday) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
-                            disabledContainerColor = Color(0xFF4CAF50).copy(alpha = 0.9f),
+                            containerColor = if (isSavedToday) ColorSaved else MaterialTheme.colorScheme.primary,
+                            disabledContainerColor = ColorSaved.copy(alpha = 0.9f),
                             disabledContentColor = Color.White
                         ),
                         elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)

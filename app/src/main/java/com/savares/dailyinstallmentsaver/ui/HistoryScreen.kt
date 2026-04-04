@@ -15,6 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.savares.dailyinstallmentsaver.R
 import com.savares.dailyinstallmentsaver.model.SavingLogEntity
+import com.savares.dailyinstallmentsaver.ui.theme.ColorSaved
+import com.savares.dailyinstallmentsaver.ui.theme.GlassAlpha
 import com.savares.dailyinstallmentsaver.util.CurrencyUtil
 import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
 import java.text.SimpleDateFormat
@@ -28,12 +30,20 @@ fun HistoryScreen(viewModel: InstallmentViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.history_title), fontWeight = FontWeight.Bold) }
+                title = { Text(stringResource(R.string.history_title), fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
-        }
+        },
+        containerColor = Color.Transparent
     ) { padding ->
         if (logs.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(stringResource(R.string.no_history), color = MaterialTheme.colorScheme.secondary)
             }
         } else {
@@ -63,17 +73,18 @@ fun HistoryListItem(log: SavingLogEntity) {
     val sdf = remember { SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.getDefault()) }
     val formattedDate = remember(log.date) { sdf.format(Date(log.date)) }
     val formattedAmount = remember(log.amount) { CurrencyUtil.formatCurrency(log.amount) }
-    
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = GlassAlpha.CARD)
         ),
         border = androidx.compose.foundation.BorderStroke(
-            0.5.dp, 
-            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)
-        )
+            1.dp,
+            Color.White.copy(alpha = 0.08f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
@@ -89,7 +100,7 @@ fun HistoryListItem(log: SavingLogEntity) {
             Text(
                 stringResource(R.string.history_amount_add, formattedAmount),
                 style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFF4CAF50),
+                color = ColorSaved,
                 fontWeight = FontWeight.ExtraBold
             )
         }
