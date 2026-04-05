@@ -54,6 +54,7 @@ import com.savares.dailyinstallmentsaver.util.LanguageConfig
 import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
 import com.savares.dailyinstallmentsaver.data.AppDatabase
 import com.savares.dailyinstallmentsaver.notification.ReminderScheduler
+import com.savares.dailyinstallmentsaver.notification.ReminderWorker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -65,7 +66,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        notificationInstallmentId.value = intent.getIntExtra("installmentId", -1).takeIf { it != -1 }
+        notificationInstallmentId.value = intent.getIntExtra(ReminderWorker.KEY_INSTALLMENT_ID, -1).takeIf { it != -1 }
         scheduleExistingReminders()
         setContent {
             var languageCode by remember { mutableStateOf(LanguageConfig.getLanguage(this)) }
@@ -109,7 +110,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        notificationInstallmentId.value = intent.getIntExtra("installmentId", -1).takeIf { it != -1 }
+        notificationInstallmentId.value = intent.getIntExtra(ReminderWorker.KEY_INSTALLMENT_ID, -1).takeIf { it != -1 }
     }
 
     override fun attachBaseContext(newBase: Context) {

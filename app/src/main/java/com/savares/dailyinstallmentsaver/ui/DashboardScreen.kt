@@ -51,7 +51,7 @@ fun DashboardScreen(
     val uiState by viewModel.dashboardUiState.collectAsState()
     val haptic = LocalHapticFeedback.current
     val listState = rememberLazyListState()
-    val motivationalMessage = remember { viewModel.motivationalMessage }
+    val motivationalMessage = viewModel.motivationalMessage
 
     var installmentToDelete by remember { mutableStateOf<InstallmentEntity?>(null) }
     var showAddSheet by remember { mutableStateOf(false) }
