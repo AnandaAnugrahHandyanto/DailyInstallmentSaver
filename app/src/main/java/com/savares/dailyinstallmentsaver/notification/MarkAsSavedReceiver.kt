@@ -7,8 +7,7 @@ import android.content.Intent
 import android.widget.Toast
 import com.savares.dailyinstallmentsaver.R
 import com.savares.dailyinstallmentsaver.data.AppDatabase
-import com.savares.dailyinstallmentsaver.model.SavingLogEntity
-import kotlinx.coroutines.CoroutineScope
+import com.savares.dailyinstallmentsaver.model.SavingLogEntityimport kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -18,12 +17,8 @@ import kotlin.math.round
 
 class MarkAsSavedReceiver : BroadcastReceiver() {
 
-    companion object {
-        const val EXTRA_INSTALLMENT_ID = "installmentId"
-    }
-
     override fun onReceive(context: Context, intent: Intent) {
-        val installmentId = intent.getIntExtra(EXTRA_INSTALLMENT_ID, -1)
+        val installmentId = intent.getIntExtra(ReminderWorker.KEY_INSTALLMENT_ID, -1)
         if (installmentId == -1) return
 
         val pendingResult = goAsync()
