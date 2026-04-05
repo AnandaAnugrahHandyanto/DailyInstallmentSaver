@@ -19,6 +19,10 @@
     <string name="notification_title">Daily Saving Reminder</string>
     <string name="notification_missed_title">Don\'t Forget! ⚠️</string>
     <string name="notification_content">Today you need to save %1$s</string>
+    <string name="notification_reminder_title">Reminder Menabung</string>
+    <string name="notification_daily_message">Hari ini kamu belum menabung. Jangan lupa ya!</string>
+    <string name="notification_weekly_message">Hari ini jadwal nabung mingguanmu. Yuk selesaikan!</string>
+    <string name="notification_channel_name">Saving Reminders</string>
     <string name="language_toggle">EN/ID</string>
     <string name="empty_list">No installments yet. Add one!</string>
     <string name="pick_date">Pick Date</string>

@@ -19,6 +19,10 @@
     <string name="notification_title">Pengingat Menabung Harian</string>
     <string name="notification_missed_title">Jangan Lupa! ⚠️</string>
     <string name="notification_content">Hari ini kamu perlu menabung %1$s</string>
+    <string name="notification_reminder_title">Reminder Menabung</string>
+    <string name="notification_daily_message">Hari ini kamu belum menabung. Jangan lupa ya!</string>
+    <string name="notification_weekly_message">Hari ini jadwal nabung mingguanmu. Yuk selesaikan!</string>
+    <string name="notification_channel_name">Pengingat Menabung</string>
     <string name="language_toggle">EN/ID</string>
     <string name="empty_list">Belum ada cicilan. Tambah sekarang!</string>
     <string name="pick_date">Pilih Tanggal</string>

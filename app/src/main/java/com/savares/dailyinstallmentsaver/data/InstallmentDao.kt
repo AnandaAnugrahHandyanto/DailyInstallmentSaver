@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 interface InstallmentDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(installment: InstallmentEntity)
+    suspend fun insert(installment: InstallmentEntity): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(installments: List<InstallmentEntity>)

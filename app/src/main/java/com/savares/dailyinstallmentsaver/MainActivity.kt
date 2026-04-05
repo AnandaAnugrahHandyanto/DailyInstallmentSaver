@@ -50,11 +50,17 @@ import com.savares.dailyinstallmentsaver.ui.theme.DailyInstallmentSaverTheme
 import com.savares.dailyinstallmentsaver.ui.theme.GlassAlpha
 import com.savares.dailyinstallmentsaver.util.LanguageConfig
 import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
+import com.savares.dailyinstallmentsaver.data.AppDatabase
+import com.savares.dailyinstallmentsaver.notification.ReminderScheduler
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        scheduleExistingReminders()
         setContent {
             var languageCode by remember { mutableStateOf(LanguageConfig.getLanguage(this)) }
             val context = LocalContext.current
@@ -94,6 +100,14 @@ class MainActivity : ComponentActivity() {
     override fun attachBaseContext(newBase: Context) {
         val lang = LanguageConfig.getLanguage(newBase)
         super.attachBaseContext(LanguageConfig.updateResources(newBase, lang))
+    }
+
+    private fun scheduleExistingReminders() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val dao = AppDatabase.getDatabase(applicationContext).installmentDao()
+            val installments = dao.getAllList()
+            ReminderScheduler.scheduleAll(applicationContext, installments)
+        }
     }
 }
 
