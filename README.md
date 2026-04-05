@@ -30,5 +30,15 @@ DailyInstallmentSaver is a simple yet powerful Android app built with **Jetpack 
 3. View your daily saving requirement on the Dashboard.
 4. Receive a notification every day summarizing your saving goals.
 
+## 📸 Screenshots
+
+| Dashboard | Add Installment | Settings |
+|:---------:|:---------------:|:--------:|
+| &nbsp; | &nbsp; | &nbsp; |
+
+| History | Stats | Notification |
+|:-------:|:-----:|:------------:|
+| &nbsp; | &nbsp; | &nbsp; |
+
 ## 📄 License
 This project is licensed under the MIT License.

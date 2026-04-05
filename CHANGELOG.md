@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.1] - 2026-04-05
+
+### Fixed
+- Removed incorrect `animateColorAsState` import from the wrong package in `DashboardScreen`.
+
 ## [1.5.0] - 2026-03-26
 
 ### Fixed
