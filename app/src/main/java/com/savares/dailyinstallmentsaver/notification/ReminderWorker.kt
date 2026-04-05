@@ -100,7 +100,7 @@ class ReminderWorker(appContext: Context, workerParams: WorkerParameters) :
         )
 
         val actionIntent = Intent(applicationContext, MarkAsSavedReceiver::class.java).apply {
-            putExtra(MarkAsSavedReceiver.EXTRA_INSTALLMENT_ID, installmentId)
+            putExtra(KEY_INSTALLMENT_ID, installmentId)
         }
         val actionPendingIntent = PendingIntent.getBroadcast(
             applicationContext,

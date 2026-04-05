@@ -77,4 +77,8 @@ dependencies {
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
     implementation(libs.kotlinx.serialization.json)
+
+    implementation(platform(libs.androidx.compose.bom))
+    implementation("androidx.compose.animation:animation")
+    implementation(libs.androidx.compose.animation)
 }

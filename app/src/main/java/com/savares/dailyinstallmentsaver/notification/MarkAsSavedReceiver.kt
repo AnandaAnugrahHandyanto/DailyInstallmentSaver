@@ -18,12 +18,8 @@ import kotlin.math.round
 
 class MarkAsSavedReceiver : BroadcastReceiver() {
 
-    companion object {
-        const val EXTRA_INSTALLMENT_ID = "installmentId"
-    }
-
     override fun onReceive(context: Context, intent: Intent) {
-        val installmentId = intent.getIntExtra(EXTRA_INSTALLMENT_ID, -1)
+        val installmentId = intent.getIntExtra(ReminderWorker.KEY_INSTALLMENT_ID, -1)
         if (installmentId == -1) return
 
         val pendingResult = goAsync()
