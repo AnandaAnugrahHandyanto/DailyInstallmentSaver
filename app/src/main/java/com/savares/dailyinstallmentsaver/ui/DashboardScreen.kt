@@ -49,10 +49,22 @@ fun DashboardScreen(
     var installmentToDelete by remember { mutableStateOf<InstallmentEntity?>(null) }
     var showAddSheet by remember { mutableStateOf(false) }
 
-    val isFabVisible by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex == 0 || listState.firstVisibleItemScrollOffset < 150
-        }
+    var previousIndex by remember { mutableIntStateOf(0) }
+    var previousOffset by remember { mutableIntStateOf(0) }
+    var isFabVisible by remember { mutableStateOf(true) }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
+            .collect { (index, offset) ->
+                val scrolledDown = index > previousIndex ||
+                    (index == previousIndex && offset > previousOffset)
+                val scrolledUp = index < previousIndex ||
+                    (index == previousIndex && offset < previousOffset)
+                if (scrolledDown) isFabVisible = false
+                else if (scrolledUp) isFabVisible = true
+                previousIndex = index
+                previousOffset = offset
+            }
     }
 
     Scaffold(
@@ -75,8 +87,8 @@ fun DashboardScreen(
         floatingActionButton = {
             AnimatedVisibility(
                 visible = isFabVisible,
-                enter = scaleIn() + fadeIn(),
-                exit = scaleOut() + fadeOut()
+                enter = fadeIn() + slideInVertically { fullHeight -> fullHeight },
+                exit = fadeOut() + slideOutVertically { fullHeight -> fullHeight }
             ) {
                 FloatingActionButton(
                     onClick = {
