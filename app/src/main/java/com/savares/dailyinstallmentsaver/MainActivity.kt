@@ -2,6 +2,7 @@ package com.savares.dailyinstallmentsaver
 
 import android.Manifest
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -54,17 +55,23 @@ import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
 import com.savares.dailyinstallmentsaver.data.AppDatabase
 import com.savares.dailyinstallmentsaver.notification.ReminderScheduler
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+    private val notificationInstallmentId = MutableStateFlow<Int?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        notificationInstallmentId.value = intent.getIntExtra("installmentId", -1).takeIf { it != -1 }
         scheduleExistingReminders()
         setContent {
             var languageCode by remember { mutableStateOf(LanguageConfig.getLanguage(this)) }
             val context = LocalContext.current
             val haptic = LocalHapticFeedback.current
+            val installmentIdToScroll by notificationInstallmentId.collectAsState()
 
             val permissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission()
@@ -90,11 +97,19 @@ class MainActivity : ComponentActivity() {
                             LanguageConfig.setLanguage(this, newLang)
                             languageCode = newLang
                             recreate()
-                        }
+                        },
+                        installmentIdToScroll = installmentIdToScroll,
+                        onNotificationConsumed = { notificationInstallmentId.value = null }
                     )
                 }
             }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        notificationInstallmentId.value = intent.getIntExtra("installmentId", -1).takeIf { it != -1 }
     }
 
     override fun attachBaseContext(newBase: Context) {
@@ -119,7 +134,12 @@ sealed class Screen(val route: String, val resourceId: Int, val icon: androidx.c
 }
 
 @Composable
-fun DailyInstallmentApp(currentLanguage: String, onLanguageChange: (String) -> Unit) {
+fun DailyInstallmentApp(
+    currentLanguage: String,
+    onLanguageChange: (String) -> Unit,
+    installmentIdToScroll: Int? = null,
+    onNotificationConsumed: () -> Unit = {}
+) {
     val navController = rememberNavController()
     val viewModel: InstallmentViewModel = viewModel()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -134,6 +154,17 @@ fun DailyInstallmentApp(currentLanguage: String, onLanguageChange: (String) -> U
         currentDestination?.route in items.map { it.route }
     }
 
+    // Navigate to Dashboard when a notification is tapped from another screen
+    LaunchedEffect(installmentIdToScroll) {
+        if (installmentIdToScroll != null && currentDestination?.route != Screen.Dashboard.route) {
+            navController.navigate(Screen.Dashboard.route) {
+                popUpTo(navController.graph.findStartDestination().id) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
@@ -144,7 +175,15 @@ fun DailyInstallmentApp(currentLanguage: String, onLanguageChange: (String) -> U
                 enterTransition = { fadeIn(tween(220)) },
                 exitTransition = { fadeOut(tween(220)) }
             ) {
-                DashboardScreen(viewModel, { navController.navigate("add_installment") }, { id -> navController.navigate("edit_installment/$id") }, currentLanguage, onLanguageChange)
+                DashboardScreen(
+                    viewModel = viewModel,
+                    onNavigateToAdd = { navController.navigate("add_installment") },
+                    onNavigateToEdit = { id -> navController.navigate("edit_installment/$id") },
+                    currentLanguage = currentLanguage,
+                    onLanguageChange = onLanguageChange,
+                    installmentIdToScroll = installmentIdToScroll,
+                    onScrollConsumed = onNotificationConsumed
+                )
             }
             composable(Screen.Stats.route,
                 enterTransition = { fadeIn(tween(220)) },

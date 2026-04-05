@@ -1,7 +1,10 @@
 package com.savares.dailyinstallmentsaver.ui
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -32,6 +35,7 @@ import com.savares.dailyinstallmentsaver.ui.theme.GlassCard
 import com.savares.dailyinstallmentsaver.ui.theme.GlassSurface
 import com.savares.dailyinstallmentsaver.util.CurrencyUtil
 import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,14 +44,18 @@ fun DashboardScreen(
     onNavigateToAdd: () -> Unit,
     onNavigateToEdit: (Int) -> Unit,
     currentLanguage: String,
-    onLanguageChange: (String) -> Unit
+    onLanguageChange: (String) -> Unit,
+    installmentIdToScroll: Int? = null,
+    onScrollConsumed: () -> Unit = {}
 ) {
     val uiState by viewModel.dashboardUiState.collectAsState()
     val haptic = LocalHapticFeedback.current
     val listState = rememberLazyListState()
+    val motivationalMessage = remember { viewModel.motivationalMessage }
 
     var installmentToDelete by remember { mutableStateOf<InstallmentEntity?>(null) }
     var showAddSheet by remember { mutableStateOf(false) }
+    var highlightedInstallmentId by remember { mutableStateOf<Int?>(null) }
 
     var previousIndex by remember { mutableIntStateOf(0) }
     var previousOffset by remember { mutableIntStateOf(0) }
@@ -65,6 +73,22 @@ fun DashboardScreen(
                 previousIndex = index
                 previousOffset = offset
             }
+    }
+
+    // Scroll to and highlight the installment opened from a notification
+    LaunchedEffect(installmentIdToScroll) {
+        if (installmentIdToScroll != null) {
+            val itemIndex = uiState.installments.indexOfFirst { it.installment.id == installmentIdToScroll }
+            if (itemIndex >= 0) {
+                // header items: total_card(0) + insights(1) + motivational(2) + title_installments(3)
+                val headerCount = 4
+                listState.animateScrollToItem(headerCount + itemIndex)
+                highlightedInstallmentId = installmentIdToScroll
+                delay(2000)
+                highlightedInstallmentId = null
+            }
+            onScrollConsumed()
+        }
     }
 
     Scaffold(
@@ -131,6 +155,15 @@ fun DashboardScreen(
                 )
             }
 
+            item(key = "motivational_message") {
+                Text(
+                    text = motivationalMessage,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                )
+            }
+
             if (uiState.installments.isNotEmpty()) {
                 item(key = "title_installments") {
                     Text(
@@ -158,7 +191,8 @@ fun DashboardScreen(
                         },
                         periodSaving = itemState.periodSaving,
                         daysLeft = itemState.daysLeft,
-                        isSavedToday = itemState.isSavedToday
+                        isSavedToday = itemState.isSavedToday,
+                        highlighted = highlightedInstallmentId == itemState.installment.id
                     )
                 }
             } else {
@@ -372,7 +406,8 @@ fun InstallmentItem(
     onDelete: () -> Unit,
     periodSaving: Double,
     daysLeft: Long,
-    isSavedToday: Boolean
+    isSavedToday: Boolean,
+    highlighted: Boolean = false
 ) {
     val haptic = LocalHapticFeedback.current
     val formattedPeriodSaving = remember(periodSaving) { CurrencyUtil.formatCurrency(periodSaving) }
@@ -386,8 +421,16 @@ fun InstallmentItem(
         derivedStateOf { ((installment.savedAmount + installment.collectedAmount) / installment.amount).coerceIn(0.0, 1.0).toFloat() }
     }
 
+    val highlightBorderColor by animateColorAsState(
+        targetValue = if (highlighted) MaterialTheme.colorScheme.primary.copy(alpha = 0.7f) else Color.Transparent,
+        animationSpec = tween(500),
+        label = "highlight_border"
+    )
+
     GlassCard(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(2.dp, highlightBorderColor, RoundedCornerShape(24.dp)),
         cornerRadius = 24.dp
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
