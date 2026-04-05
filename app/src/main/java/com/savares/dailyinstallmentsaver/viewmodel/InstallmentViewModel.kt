@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 
 data class DashboardInstallmentUiState(
     val installment: InstallmentEntity,
-    val dailySaving: Double,
+    val periodSaving: Double,
     val daysLeft: Long,
     val isSavedToday: Boolean,
     val progress: Float
@@ -77,7 +77,7 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
         val installmentUiStates = inst.map { 
             DashboardInstallmentUiState(
                 installment = it,
-                dailySaving = calculateDailySaving(it),
+                periodSaving = calculatePeriodSaving(it),
                 daysLeft = calculateDaysLeft(it.dueDate),
                 isSavedToday = isSavedToday(it),
                 progress = if (it.amount > 0) ((it.savedAmount + it.collectedAmount) / it.amount).coerceIn(0.0, 1.0).toFloat() else 0f
@@ -216,9 +216,9 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
         return "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.MONTH)}-${cal.get(Calendar.DAY_OF_MONTH)}"
     }
 
-    fun addInstallment(name: String, amount: Double, dueDate: Long, wallet: String, collectedAmount: Double = 0.0) {
+    fun addInstallment(name: String, amount: Double, dueDate: Long, wallet: String, collectedAmount: Double = 0.0, savingType: String = "DAILY") {
         viewModelScope.launch(Dispatchers.IO) {
-            dao.insert(InstallmentEntity(name = name, amount = amount, dueDate = dueDate, wallet = wallet, collectedAmount = collectedAmount))
+            dao.insert(InstallmentEntity(name = name, amount = amount, dueDate = dueDate, wallet = wallet, collectedAmount = collectedAmount, savingType = savingType))
         }
     }
 
@@ -230,13 +230,13 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
 
     fun markAsSaved(installment: InstallmentEntity) {
         viewModelScope.launch(Dispatchers.IO) {
-            val daily = calculateDailySaving(installment)
+            val amount = calculatePeriodSaving(installment)
             val updated = installment.copy(
-                savedAmount = installment.savedAmount + daily,
+                savedAmount = installment.savedAmount + amount,
                 lastSavedDate = System.currentTimeMillis()
             )
             dao.update(updated)
-            dao.insertLog(SavingLogEntity(installmentName = installment.name, date = System.currentTimeMillis(), amount = daily))
+            dao.insertLog(SavingLogEntity(installmentName = installment.name, date = System.currentTimeMillis(), amount = amount))
         }
     }
 
@@ -251,6 +251,17 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
         val daysLeft = calculateDaysLeft(installment.dueDate)
         val remainingAmount = (installment.amount - installment.collectedAmount - installment.savedAmount).coerceAtLeast(0.0)
         return if (daysLeft > 0) remainingAmount / daysLeft else remainingAmount
+    }
+
+    fun calculatePeriodSaving(installment: InstallmentEntity): Double {
+        val daysLeft = calculateDaysLeft(installment.dueDate)
+        val remainingAmount = (installment.amount - installment.collectedAmount - installment.savedAmount).coerceAtLeast(0.0)
+        return if (installment.savingType == "WEEKLY") {
+            val weeksLeftCeil = kotlin.math.ceil(daysLeft / 7.0).coerceAtLeast(1.0)
+            if (daysLeft > 0) kotlin.math.round(remainingAmount / weeksLeftCeil).toDouble() else remainingAmount
+        } else {
+            if (daysLeft > 0) kotlin.math.round(remainingAmount / daysLeft).toDouble() else remainingAmount
+        }
     }
 
     fun calculateDaysLeft(dueDate: Long): Long {

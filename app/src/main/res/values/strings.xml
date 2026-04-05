@@ -68,4 +68,9 @@
     <string name="collected_amount">Collected Amount</string>
     <string name="wallet_type">Wallet Type</string>
     <string name="collected_amount_error">Collected amount cannot exceed target amount</string>
+    <string name="saving_type">Saving Type</string>
+    <string name="saving_type_daily">Daily</string>
+    <string name="saving_type_weekly">Weekly</string>
+    <string name="daily_saving">Daily Saving</string>
+    <string name="weekly_saving">Weekly Saving</string>
 </resources>

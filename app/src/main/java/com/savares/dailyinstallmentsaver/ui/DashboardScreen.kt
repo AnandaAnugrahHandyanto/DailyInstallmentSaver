@@ -156,7 +156,7 @@ fun DashboardScreen(
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             installmentToDelete = itemState.installment
                         },
-                        dailySaving = itemState.dailySaving,
+                        periodSaving = itemState.periodSaving,
                         daysLeft = itemState.daysLeft,
                         isSavedToday = itemState.isSavedToday
                     )
@@ -370,12 +370,17 @@ fun InstallmentItem(
     onMarkAsSaved: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    dailySaving: Double,
+    periodSaving: Double,
     daysLeft: Long,
     isSavedToday: Boolean
 ) {
     val haptic = LocalHapticFeedback.current
-    val formattedDaily = remember(dailySaving) { CurrencyUtil.formatCurrency(dailySaving) }
+    val formattedPeriodSaving = remember(periodSaving) { CurrencyUtil.formatCurrency(periodSaving) }
+    val savingLabel = if (installment.savingType == "WEEKLY") {
+        stringResource(R.string.weekly_saving)
+    } else {
+        stringResource(R.string.daily_saving)
+    }
 
     val progress by remember(installment.savedAmount, installment.collectedAmount, installment.amount) {
         derivedStateOf { ((installment.savedAmount + installment.collectedAmount) / installment.amount).coerceIn(0.0, 1.0).toFloat() }
@@ -476,12 +481,12 @@ fun InstallmentItem(
                 ) {
                     Column {
                         Text(
-                            text = stringResource(R.string.daily_needed),
+                            text = savingLabel,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.secondary
                         )
                         Text(
-                            text = formattedDaily,
+                            text = formattedPeriodSaving,
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.primary
