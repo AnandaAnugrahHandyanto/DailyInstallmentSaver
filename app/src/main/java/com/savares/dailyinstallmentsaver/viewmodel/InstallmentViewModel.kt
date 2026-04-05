@@ -44,6 +44,14 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
 
     private val dao = AppDatabase.getDatabase(app).installmentDao()
 
+    val motivationalMessage: String = listOf(
+        "Sedikit demi sedikit, lama-lama jadi bukit 💪",
+        "Kamu makin dekat ke target!",
+        "Jangan skip hari ini ya 🔥",
+        "Konsisten itu kunci sukses",
+        "Future kamu akan berterima kasih 🌟"
+    ).random()
+
     fun getDao(): InstallmentDao = dao
 
     val installments: StateFlow<List<InstallmentEntity>> = dao.getAll()

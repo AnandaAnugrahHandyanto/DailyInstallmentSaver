@@ -2,11 +2,14 @@ package com.savares.dailyinstallmentsaver.notification
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.savares.dailyinstallmentsaver.MainActivity
 import com.savares.dailyinstallmentsaver.R
 import com.savares.dailyinstallmentsaver.data.AppDatabase
 import com.savares.dailyinstallmentsaver.model.InstallmentEntity
@@ -85,6 +88,27 @@ class ReminderWorker(appContext: Context, workerParams: WorkerParameters) :
             notificationManager.createNotificationChannel(channel)
         }
 
+        val clickIntent = Intent(applicationContext, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(KEY_INSTALLMENT_ID, installmentId)
+        }
+        val clickPendingIntent = PendingIntent.getActivity(
+            applicationContext,
+            installmentId,
+            clickIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val actionIntent = Intent(applicationContext, MarkAsSavedReceiver::class.java).apply {
+            putExtra(MarkAsSavedReceiver.EXTRA_INSTALLMENT_ID, installmentId)
+        }
+        val actionPendingIntent = PendingIntent.getBroadcast(
+            applicationContext,
+            installmentId,
+            actionIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
             .setContentTitle(applicationContext.getString(R.string.notification_reminder_title))
             .setContentText(message)
@@ -92,6 +116,12 @@ class ReminderWorker(appContext: Context, workerParams: WorkerParameters) :
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
+            .setContentIntent(clickPendingIntent)
+            .addAction(
+                0,
+                applicationContext.getString(R.string.notification_action_mark_saved),
+                actionPendingIntent
+            )
             .build()
 
         notificationManager.notify(installmentId, notification)

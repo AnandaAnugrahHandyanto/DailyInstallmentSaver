@@ -77,4 +77,8 @@
     <string name="saving_type_weekly">Weekly</string>
     <string name="daily_saving">Daily Saving</string>
     <string name="weekly_saving">Weekly Saving</string>
+
+    <!-- Notification action and feedback -->
+    <string name="notification_action_mark_saved">Sudah Nabung</string>
+    <string name="notification_saved_toast">Tabungan berhasil dicatat</string>
 </resources>
