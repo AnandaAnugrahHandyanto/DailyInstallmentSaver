@@ -79,6 +79,6 @@
     <string name="weekly_saving">Weekly Saving</string>
 
     <!-- Notification action and feedback -->
-    <string name="notification_action_mark_saved">Sudah Nabung</string>
-    <string name="notification_saved_toast">Tabungan berhasil dicatat</string>
+    <string name="notification_action_mark_saved">Already Saved</string>
+    <string name="notification_saved_toast">Saving recorded successfully</string>
 </resources>
