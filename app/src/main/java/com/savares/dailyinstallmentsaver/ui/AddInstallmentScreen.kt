@@ -37,6 +37,8 @@ fun AddInstallmentScreen(
     var collectedAmount by remember { mutableStateOf("") }
     var dueDate by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var savingType by remember { mutableStateOf("DAILY") }
+    var savingTypeExpanded by remember { mutableStateOf(false) }
 
     LaunchedEffect(editingInstallment) {
         editingInstallment?.let {
@@ -45,6 +47,7 @@ fun AddInstallmentScreen(
             wallet = it.wallet
             collectedAmount = if (it.collectedAmount > 0.0) it.collectedAmount.toString() else ""
             dueDate = it.dueDate
+            savingType = it.savingType
         }
     }
 
@@ -131,13 +134,50 @@ fun AddInstallmentScreen(
                 Text(text = stringResource(R.string.due_date_display, formattedDate))
             }
 
+            val dailyLabel = stringResource(R.string.saving_type_daily)
+            val weeklyLabel = stringResource(R.string.saving_type_weekly)
+            val savingTypeOptions = remember(dailyLabel, weeklyLabel) {
+                listOf("DAILY" to dailyLabel, "WEEKLY" to weeklyLabel)
+            }
+            val savingTypeLabel = if (savingType == "WEEKLY") weeklyLabel else dailyLabel
+            ExposedDropdownMenuBox(
+                expanded = savingTypeExpanded,
+                onExpandedChange = { savingTypeExpanded = !savingTypeExpanded }
+            ) {
+                OutlinedTextField(
+                    value = savingTypeLabel,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text(stringResource(R.string.saving_type)) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = savingTypeExpanded) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor(),
+                    shape = RoundedCornerShape(16.dp)
+                )
+                ExposedDropdownMenu(
+                    expanded = savingTypeExpanded,
+                    onDismissRequest = { savingTypeExpanded = false }
+                ) {
+                    savingTypeOptions.forEach { (value, label) ->
+                        DropdownMenuItem(
+                            text = { Text(label) },
+                            onClick = {
+                                savingType = value
+                                savingTypeExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
             Spacer(Modifier.height(4.dp))
 
             Button(
                 onClick = {
                     if (name.isNotBlank() && amount.isNotBlank() && wallet.isNotBlank() && !collectedAmountError) {
                         if (installmentId == null) {
-                            viewModel.addInstallment(name, amountVal, dueDate, wallet, if (collectedAmount.isBlank()) 0.0 else collectedVal)
+                            viewModel.addInstallment(name, amountVal, dueDate, wallet, if (collectedAmount.isBlank()) 0.0 else collectedVal, savingType)
                         } else {
                             editingInstallment?.let {
                                 viewModel.updateInstallment(
@@ -146,7 +186,8 @@ fun AddInstallmentScreen(
                                         amount = amountVal,
                                         dueDate = dueDate,
                                         wallet = wallet,
-                                        collectedAmount = if (collectedAmount.isBlank()) 0.0 else collectedVal
+                                        collectedAmount = if (collectedAmount.isBlank()) 0.0 else collectedVal,
+                                        savingType = savingType
                                     )
                                 )
                             }

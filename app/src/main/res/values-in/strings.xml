@@ -68,4 +68,9 @@
     <string name="collected_amount">Jumlah Terkumpul</string>
     <string name="wallet_type">Jenis Dompet</string>
     <string name="collected_amount_error">Jumlah terkumpul tidak boleh melebihi target</string>
+    <string name="saving_type">Tipe Tabungan</string>
+    <string name="saving_type_daily">Harian</string>
+    <string name="saving_type_weekly">Mingguan</string>
+    <string name="daily_saving">Tabungan Harian</string>
+    <string name="weekly_saving">Tabungan Mingguan</string>
 </resources>
