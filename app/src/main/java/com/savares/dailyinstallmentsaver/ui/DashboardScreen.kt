@@ -1,7 +1,6 @@
 package com.savares.dailyinstallmentsaver.ui
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
