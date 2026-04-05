@@ -38,6 +38,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -52,7 +53,6 @@ import com.savares.dailyinstallmentsaver.util.LanguageConfig
 import com.savares.dailyinstallmentsaver.viewmodel.InstallmentViewModel
 import com.savares.dailyinstallmentsaver.data.AppDatabase
 import com.savares.dailyinstallmentsaver.notification.ReminderScheduler
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -103,7 +103,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun scheduleExistingReminders() {
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             val dao = AppDatabase.getDatabase(applicationContext).installmentDao()
             val installments = dao.getAllList()
             ReminderScheduler.scheduleAll(applicationContext, installments)

@@ -231,6 +231,7 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
     fun updateInstallment(installment: InstallmentEntity) {
         viewModelScope.launch(Dispatchers.IO) {
             dao.update(installment)
+            ReminderScheduler.scheduleReminder(getApplication(), installment)
         }
     }
 
