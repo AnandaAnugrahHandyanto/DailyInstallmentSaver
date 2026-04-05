@@ -1,12 +1,15 @@
 package com.savares.dailyinstallmentsaver.viewmodel
 
 import android.app.Application
+import android.app.NotificationManager
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.savares.dailyinstallmentsaver.data.AppDatabase
 import com.savares.dailyinstallmentsaver.data.InstallmentDao
 import com.savares.dailyinstallmentsaver.model.InstallmentEntity
 import com.savares.dailyinstallmentsaver.model.SavingLogEntity
+import com.savares.dailyinstallmentsaver.notification.ReminderScheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -218,7 +221,10 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
 
     fun addInstallment(name: String, amount: Double, dueDate: Long, wallet: String, collectedAmount: Double = 0.0, savingType: String = "DAILY") {
         viewModelScope.launch(Dispatchers.IO) {
-            dao.insert(InstallmentEntity(name = name, amount = amount, dueDate = dueDate, wallet = wallet, collectedAmount = collectedAmount, savingType = savingType))
+            val entity = InstallmentEntity(name = name, amount = amount, dueDate = dueDate, wallet = wallet, collectedAmount = collectedAmount, savingType = savingType)
+            val insertedId = dao.insert(entity)
+            val scheduled = entity.copy(id = insertedId.toInt())
+            ReminderScheduler.scheduleReminder(getApplication(), scheduled)
         }
     }
 
@@ -237,13 +243,17 @@ class InstallmentViewModel(app: Application) : AndroidViewModel(app) {
             )
             dao.update(updated)
             dao.insertLog(SavingLogEntity(installmentName = installment.name, date = System.currentTimeMillis(), amount = amount))
+            val notificationManager = getApplication<Application>()
+                .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(installment.id)
         }
     }
 
     fun deleteInstallment(installment: InstallmentEntity) {
-        viewModelScope.launch(Dispatchers.IO) { 
+        viewModelScope.launch(Dispatchers.IO) {
+            ReminderScheduler.cancelReminder(getApplication(), installment.id)
             dao.deleteLogsByInstallmentName(installment.name)
-            dao.delete(installment) 
+            dao.delete(installment)
         }
     }
 

@@ -10,83 +10,90 @@ import androidx.work.WorkerParameters
 import com.savares.dailyinstallmentsaver.R
 import com.savares.dailyinstallmentsaver.data.AppDatabase
 import com.savares.dailyinstallmentsaver.model.InstallmentEntity
-import com.savares.dailyinstallmentsaver.util.CurrencyUtil
 import kotlinx.coroutines.flow.first
-import java.util.*
-import java.util.concurrent.TimeUnit
+import java.util.Calendar
 
 class ReminderWorker(appContext: Context, workerParams: WorkerParameters) :
     CoroutineWorker(appContext, workerParams) {
+
+    companion object {
+        const val KEY_INSTALLMENT_ID = "installmentId"
+        const val CHANNEL_ID = "reminder_channel"
+        private const val HOUR_START = 8
+        private const val HOUR_END = 22
+    }
 
     override suspend fun doWork(): Result {
         val prefs = applicationContext.getSharedPreferences("settings", Context.MODE_PRIVATE)
         if (!prefs.getBoolean("notifications_enabled", true)) return Result.success()
 
+        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        if (hour < HOUR_START || hour >= HOUR_END) return Result.success()
+
+        val installmentId = inputData.getInt(KEY_INSTALLMENT_ID, -1)
+        if (installmentId == -1) return Result.failure()
+
         val dao = AppDatabase.getDatabase(applicationContext).installmentDao()
-        val installments = dao.getAll().first()
+        val installment = dao.getAll().first().find { it.id == installmentId }
+            ?: return Result.success()
 
-        if (installments.isNotEmpty()) {
-            var totalToday = 0.0
-            var missedSomething = false
-            
-            val today = Calendar.getInstance()
-            
-            installments.forEach {
-                val daily = calculateDaily(it)
-                totalToday += daily
-                
-                if (it.lastSavedDate != 0L) {
-                    val last = Calendar.getInstance().apply { timeInMillis = it.lastSavedDate }
-                    if (today.get(Calendar.DAY_OF_YEAR) - last.get(Calendar.DAY_OF_YEAR) > 1 || 
-                        today.get(Calendar.YEAR) != last.get(Calendar.YEAR)) {
-                        missedSomething = true
-                    }
-                } else {
-                    missedSomething = true
-                }
-            }
+        val shouldNotify = when (installment.savingType) {
+            "WEEKLY" -> shouldNotifyWeekly(installment)
+            else -> !isSavedToday(installment)
+        }
 
-            val title = if (missedSomething) {
-                applicationContext.getString(R.string.notification_missed_title)
+        if (shouldNotify) {
+            val message = if (installment.savingType == "WEEKLY") {
+                applicationContext.getString(R.string.notification_weekly_message)
             } else {
-                applicationContext.getString(R.string.notification_title)
+                applicationContext.getString(R.string.notification_daily_message)
             }
-
-            val content = applicationContext.getString(
-                R.string.notification_content, 
-                CurrencyUtil.formatCurrency(totalToday)
-            )
-            
-            showNotification(title, content)
+            showNotification(installment.id, message)
         }
 
         return Result.success()
     }
 
-    private fun showNotification(title: String, content: String) {
-        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "daily_reminder_channel"
+    private fun isSavedToday(installment: InstallmentEntity): Boolean {
+        if (installment.lastSavedDate == 0L) return false
+        val lastSaved = Calendar.getInstance().apply { timeInMillis = installment.lastSavedDate }
+        val today = Calendar.getInstance()
+        return lastSaved.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                lastSaved.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR)
+    }
+
+    private fun shouldNotifyWeekly(installment: InstallmentEntity): Boolean {
+        val today = Calendar.getInstance()
+        val dueCal = Calendar.getInstance().apply { timeInMillis = installment.dueDate }
+        if (today.get(Calendar.DAY_OF_WEEK) != dueCal.get(Calendar.DAY_OF_WEEK)) return false
+        if (installment.lastSavedDate == 0L) return true
+        val lastSaved = Calendar.getInstance().apply { timeInMillis = installment.lastSavedDate }
+        return !(lastSaved.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                lastSaved.get(Calendar.WEEK_OF_YEAR) == today.get(Calendar.WEEK_OF_YEAR))
+    }
+
+    private fun showNotification(installmentId: Int, message: String) {
+        val notificationManager =
+            applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "Daily Reminders", NotificationManager.IMPORTANCE_HIGH)
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                applicationContext.getString(R.string.notification_channel_name),
+                NotificationManager.IMPORTANCE_HIGH
+            )
             notificationManager.createNotificationChannel(channel)
         }
 
-        val notification = NotificationCompat.Builder(applicationContext, channelId)
-            .setContentTitle(title)
-            .setContentText(content)
+        val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+            .setContentTitle(applicationContext.getString(R.string.notification_reminder_title))
+            .setContentText(message)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(message))
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
 
-        notificationManager.notify(1, notification)
-    }
-
-    private fun calculateDaily(installment: InstallmentEntity): Double {
-        val diff = installment.dueDate - System.currentTimeMillis()
-        val days = TimeUnit.MILLISECONDS.toDays(diff).coerceAtLeast(0) + 1
-        val remaining = (installment.amount - installment.savedAmount).coerceAtLeast(0.0)
-        return remaining / days
+        notificationManager.notify(installmentId, notification)
     }
 }
