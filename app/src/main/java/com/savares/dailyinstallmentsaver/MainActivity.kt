@@ -18,6 +18,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -70,9 +71,22 @@ class MainActivity : ComponentActivity() {
         scheduleExistingReminders()
         setContent {
             var languageCode by remember { mutableStateOf(LanguageConfig.getLanguage(this)) }
+            var themeMode by remember {
+                mutableStateOf(
+                    getSharedPreferences("settings", Context.MODE_PRIVATE)
+                        .getString("theme_mode", "system") ?: "system"
+                )
+            }
             val context = LocalContext.current
             val haptic = LocalHapticFeedback.current
             val installmentIdToScroll by notificationInstallmentId.collectAsState()
+
+            val systemDark = isSystemInDarkTheme()
+            val isDarkTheme = when (themeMode) {
+                "dark" -> true
+                "light" -> false
+                else -> systemDark
+            }
 
             val permissionLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.RequestPermission()
@@ -86,7 +100,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            DailyInstallmentSaverTheme {
+            DailyInstallmentSaverTheme(darkTheme = isDarkTheme) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -98,6 +112,12 @@ class MainActivity : ComponentActivity() {
                             LanguageConfig.setLanguage(this, newLang)
                             languageCode = newLang
                             recreate()
+                        },
+                        currentTheme = themeMode,
+                        onThemeChange = { newTheme ->
+                            themeMode = newTheme
+                            getSharedPreferences("settings", Context.MODE_PRIVATE)
+                                .edit().putString("theme_mode", newTheme).apply()
                         },
                         installmentIdToScroll = installmentIdToScroll,
                         onNotificationConsumed = { notificationInstallmentId.value = null }
@@ -138,6 +158,8 @@ sealed class Screen(val route: String, val resourceId: Int, val icon: androidx.c
 fun DailyInstallmentApp(
     currentLanguage: String,
     onLanguageChange: (String) -> Unit,
+    currentTheme: String,
+    onThemeChange: (String) -> Unit,
     installmentIdToScroll: Int? = null,
     onNotificationConsumed: () -> Unit = {}
 ) {
@@ -197,7 +219,7 @@ fun DailyInstallmentApp(
             composable(Screen.Settings.route,
                 enterTransition = { fadeIn(tween(220)) },
                 exitTransition = { fadeOut(tween(220)) }
-            ) { SettingsScreen(viewModel, currentLanguage, onLanguageChange) }
+            ) { SettingsScreen(viewModel, currentLanguage, onLanguageChange, currentTheme, onThemeChange) }
 
             composable("add_installment",
                 enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Up, tween(280)) },

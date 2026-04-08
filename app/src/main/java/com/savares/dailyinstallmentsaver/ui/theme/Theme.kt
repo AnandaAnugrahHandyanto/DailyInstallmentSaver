@@ -13,37 +13,54 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = TelegramDarkPrimary,
+    primary = GoogleDarkPrimary,
+    onPrimary = Color(0xFF003A75),
+    primaryContainer = GoogleDarkAccent,
+    onPrimaryContainer = GoogleDarkText,
+    secondary = GoogleDarkSecondaryText,
+    onSecondary = GoogleDarkText,
+    background = GoogleDarkBackground,
+    onBackground = GoogleDarkText,
+    surface = GoogleDarkSurface,
+    onSurface = GoogleDarkText,
+    surfaceVariant = GoogleDarkCard,
+    onSurfaceVariant = GoogleDarkSecondaryText,
+    outline = GoogleDarkSecondaryText,
+    surfaceTint = Color.Transparent
+)
+
+private val LightColorScheme = lightColorScheme(
+    primary = GoogleLightPrimary,
     onPrimary = Color.White,
-    primaryContainer = TelegramDarkAccent,
-    onPrimaryContainer = Color.White,
-    secondary = TelegramDarkSecondaryText,
+    primaryContainer = GoogleLightAccent,
+    onPrimaryContainer = GoogleLightText,
+    secondary = GoogleLightSecondaryText,
     onSecondary = Color.White,
-    background = TelegramDarkBackground,
-    onBackground = TelegramDarkText,
-    surface = TelegramDarkSurface,
-    onSurface = TelegramDarkText,
-    surfaceVariant = TelegramDarkCard,
-    onSurfaceVariant = TelegramDarkSecondaryText,
-    outline = TelegramDarkSecondaryText,
+    background = GoogleLightBackground,
+    onBackground = GoogleLightText,
+    surface = GoogleLightSurface,
+    onSurface = GoogleLightText,
+    surfaceVariant = GoogleLightCard,
+    onSurfaceVariant = GoogleLightSecondaryText,
+    outline = GoogleLightSecondaryText,
     surfaceTint = Color.Transparent
 )
 
 @Composable
 fun DailyInstallmentSaverTheme(
-    darkTheme: Boolean = true,
+    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = DarkColorScheme
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
     val view = LocalView.current
-    
+
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
             window.statusBarColor = Color.Transparent.toArgb()
             window.navigationBarColor = Color.Transparent.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = false
-            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = false
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            WindowCompat.getInsetsController(window, view).isAppearanceLightNavigationBars = !darkTheme
             WindowCompat.setDecorFitsSystemWindows(window, false)
         }
     }

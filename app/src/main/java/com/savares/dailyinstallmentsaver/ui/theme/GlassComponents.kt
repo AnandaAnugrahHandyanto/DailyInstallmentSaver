@@ -10,7 +10,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -30,7 +29,7 @@ fun GlassCard(
         ),
         border = BorderStroke(
             width = 1.dp,
-            color = Color.White.copy(alpha = borderAlpha)
+            color = MaterialTheme.colorScheme.outline.copy(alpha = borderAlpha)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -52,7 +51,7 @@ fun GlassSurface(
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = backgroundAlpha),
         border = BorderStroke(
             width = 1.dp,
-            color = Color.White.copy(alpha = borderAlpha)
+            color = MaterialTheme.colorScheme.outline.copy(alpha = borderAlpha)
         ),
         shadowElevation = 2.dp,
         content = content

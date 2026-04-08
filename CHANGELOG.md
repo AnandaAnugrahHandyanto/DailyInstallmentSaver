@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.6.0] - 2026-04-08
+
+### Added
+- **Dark Mode & Light Mode**: Introduced Google Material-styled dark and light themes. Users can now choose between Light, Dark, or System Default in the Settings screen.
+- **Theme Persistence**: Selected theme mode is saved to SharedPreferences and restored on app restart.
+
+### Changed
+- **Color System**: Replaced the previous Telegram-based dark palette with Google Material color tokens for both dark (`GoogleDark*`) and light (`GoogleLight*`) variants.
+- **System Bar Appearance**: Status bar and navigation bar icon tint now adapts automatically to the active theme (light icons for dark theme, dark icons for light theme).
+- **Glass Components**: Card and surface borders now use theme-aware `outline` color instead of a hardcoded white, ensuring correct appearance in both themes.
+
 ## [1.5.1] - 2026-04-05
 
 ### Fixed

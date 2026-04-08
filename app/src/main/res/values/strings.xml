@@ -81,4 +81,10 @@
     <!-- Notification action and feedback -->
     <string name="notification_action_mark_saved">Already Saved</string>
     <string name="notification_saved_toast">Saving recorded successfully</string>
+
+    <!-- Theme Mode -->
+    <string name="theme_mode">Theme Mode</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System</string>
 </resources>
