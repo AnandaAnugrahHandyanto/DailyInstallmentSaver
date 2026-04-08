@@ -8,6 +8,7 @@ DailyInstallmentSaver is a simple yet powerful Android app built with **Jetpack 
 - **Add Installment**: Easily input installment name, total amount, wallet type, and due date.
 - **Auto-Calculation**: Automatically computes daily savings (Amount / Days Left).
 - **Daily Notifications**: Get reminded every day with a summary of what you need to save.
+- **Dark / Light / System Theme**: Switch between Google-style dark mode, light mode, or follow system default.
 - **Localization**: Supports English and Indonesian.
 - **Offline First**: Uses Room Database for local data persistence.
 

@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,7 +32,9 @@ import kotlinx.coroutines.launch
 fun SettingsScreen(
     viewModel: InstallmentViewModel,
     currentLanguage: String,
-    onLanguageChange: (String) -> Unit
+    onLanguageChange: (String) -> Unit,
+    currentTheme: String,
+    onThemeChange: (String) -> Unit
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -108,6 +111,25 @@ fun SettingsScreen(
                     )
 
                     SettingsItem(
+                        title = stringResource(R.string.theme_mode),
+                        icon = Icons.Default.Palette,
+                        action = {}
+                    )
+                    ThemeModeSelector(
+                        currentTheme = currentTheme,
+                        onThemeChange = onThemeChange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                            .padding(bottom = 12.dp)
+                    )
+
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+                    )
+
+                    SettingsItem(
                         title = stringResource(R.string.notifications),
                         icon = Icons.Default.Notifications,
                         action = {
@@ -154,6 +176,30 @@ fun SettingsScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ThemeModeSelector(
+    currentTheme: String,
+    onThemeChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val options = listOf(
+        "light" to stringResource(R.string.theme_light),
+        "dark" to stringResource(R.string.theme_dark),
+        "system" to stringResource(R.string.theme_system)
+    )
+    SingleChoiceSegmentedButtonRow(modifier = modifier) {
+        options.forEachIndexed { index, (value, label) ->
+            SegmentedButton(
+                selected = currentTheme == value,
+                onClick = { onThemeChange(value) },
+                shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
+                label = { Text(label, maxLines = 1) }
+            )
         }
     }
 }

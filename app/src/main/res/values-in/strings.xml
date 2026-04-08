@@ -81,4 +81,10 @@
     <!-- Notification action and feedback -->
     <string name="notification_action_mark_saved">Sudah Nabung</string>
     <string name="notification_saved_toast">Tabungan berhasil dicatat</string>
+
+    <!-- Theme Mode -->
+    <string name="theme_mode">Mode Tampilan</string>
+    <string name="theme_light">Terang</string>
+    <string name="theme_dark">Gelap</string>
+    <string name="theme_system">Sistem</string>
 </resources>
